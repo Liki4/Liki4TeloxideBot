@@ -79,14 +79,7 @@ pub async fn handler(
                                 .unwrap()
                                 .iter()
                                 .filter(|(_, info)| {
-                                    (info.params.max_images == 1
-                                        && info.params.min_images == 1
-                                        && info.params.max_texts == 0
-                                        && info.params.min_texts == 0)
-                                        || (info.params.max_texts == 1
-                                            && info.params.min_texts == 1
-                                            && info.params.max_images == 0
-                                            && info.params.min_images == 0)
+                                    info.params.min_images <= 1 && info.params.min_texts <= 1
                                 })
                                 .collect::<Vec<_>>();
                             one_arg_memes.shuffle(&mut rng);
@@ -150,10 +143,7 @@ pub async fn handler(
                                 .unwrap()
                                 .iter()
                                 .filter(|(_, info)| {
-                                    info.params.max_texts == 1
-                                        && info.params.min_texts == 1
-                                        && info.params.max_images == 0
-                                        && info.params.min_images == 0
+                                    info.params.min_images == 0 && info.params.min_texts <= 1
                                 })
                                 .collect::<Vec<_>>();
                             one_arg_memes.shuffle(&mut rng);
