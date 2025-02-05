@@ -9,11 +9,8 @@ impl MemeClient {
         let keys = get_meme_keys();
         let mut infos: HashMap<String, MemeInfo> = HashMap::new();
         for key in keys {
-            let meme = match get_meme(key) {
-                Some(meme) => meme,
-                None => return Err(Error::NoSuchMeme(format!("Meme `{key}` not found."))),
-            };
-            infos.insert(key.to_string(), meme.info());
+            let meme_info = self.get_info_impl(key).await?;
+            infos.insert(key.to_string(), meme_info);
         }
         Ok(infos)
     }
