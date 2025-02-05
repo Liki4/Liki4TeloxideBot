@@ -19,9 +19,8 @@ pub async fn handler(
     let error = match action {
         MemeAction::Info => match args.first() {
             Some(key) => {
-                let client = CLIENT.lock().await;
-                let preview = client.render_preview(key).await;
-                let info = client.get_info(key);
+                let preview = CLIENT.render_preview(key).await;
+                let info = CLIENT.get_info(key);
 
                 match (preview, info) {
                     (Ok(preview), Ok(meme_info)) => {
@@ -49,7 +48,7 @@ pub async fn handler(
             }
             None => Error::ArgMismatch,
         },
-        MemeAction::List => match CLIENT.lock().await.render_list().await {
+        MemeAction::List => match CLIENT.render_list().await {
             Ok(meme_list) => {
                 return send_media(bot, msg, meme_list, "meme_list".to_string()).await;
             }
@@ -68,7 +67,6 @@ pub async fn handler(
             None => Error::ArgMismatch,
         },
         MemeAction::Random => {
-            let client = CLIENT.lock().await;
             match get_sender_profile_photo(bot, msg).await {
                 Ok(profile_photo) => {
                     let mut rng = rand::rng();

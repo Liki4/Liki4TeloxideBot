@@ -11,15 +11,14 @@ use meme_generator::meme::MemeInfo;
 use meme_generator::resources::check_resources;
 use std::collections::HashMap;
 use std::env;
-use tokio::sync::{Mutex, OnceCell};
+use std::sync::Arc;
+use tokio::sync::OnceCell;
 
 lazy_static! {
-    pub static ref CLIENT: Mutex<Box<dyn MemeGeneratorApi + Send + Sync>> = {
-        let client: Box<dyn MemeGeneratorApi + Send + Sync> = match env::var("MEME_API_URL") {
-            Ok(url) => Box::new(MemeApiClient::new(&url).unwrap()),
-            Err(_) => Box::new(MemeClient::new()),
-        };
-        Mutex::new(client)
+    pub static ref CLIENT: Arc<dyn MemeGeneratorApi + Send + Sync> = match env::var("MEME_API_URL")
+    {
+        Ok(url) => Arc::new(MemeApiClient::new(&url).unwrap()),
+        Err(_) => Arc::new(MemeClient::new()),
     };
 }
 
@@ -36,7 +35,7 @@ pub static MEME_KEY_INFO_MAPPING: OnceCell<HashMap<String, MemeInfo>> = OnceCell
 pub async fn init_meme_mapping() {
     log::info!("Initializing meme mapping...");
 
-    let infos = CLIENT.lock().await.get_infos().await.unwrap();
+    let infos = CLIENT.get_infos().await.unwrap();
     let mut meme_keyword_key_map = HashMap::<String, String>::new();
     let mut meme_key_info_map = HashMap::<String, MemeInfo>::new();
 
