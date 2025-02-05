@@ -67,114 +67,73 @@ pub async fn handler(
             None => Error::ArgMismatch,
         },
         MemeAction::Random => {
-            match get_sender_profile_photo(bot, msg).await {
-                Ok(profile_photo) => {
-                    let mut rng = rand::rng();
-                    match profile_photo {
-                        Some((file_id, file_data)) => {
-                            let mut one_arg_memes = MEME_KEY_INFO_MAPPING
-                                .get()
-                                .unwrap()
-                                .iter()
-                                .filter(|(_, info)| {
-                                    info.params.min_images <= 1 && info.params.min_texts <= 1
-                                })
-                                .collect::<Vec<_>>();
-                            one_arg_memes.shuffle(&mut rng);
-                            match one_arg_memes.choose(&mut rng) {
-                                Some(&(key, info)) => {
-                                    match (info.params.max_images, info.params.max_texts) {
-                                        (_, 1) => {
-                                            let mut images = HashMap::<String, Vec<u8>>::new();
-                                            images.insert(file_id.clone(), file_data);
-                                            let mut args = HashMap::<String, OptionValue>::new();
-                                            args.insert("circle".to_string(), true.into());
-                                            let options = RenderOptions {
-                                                images: Some(images),
-                                                texts: None,
-                                                args: Some(args),
-                                            };
-                                            // match client.render_meme(key.as_str(), options)
-                                            //     .await
-                                            // {
-                                            //     Ok(meme) => {
-                                            //         return send_media(bot, msg, meme, file_id)
-                                            //             .await;
-                                            //     }
-                                            //     Err(e) => e,
-                                            // }
-                                            Error::MemeFeedback("TEST_ERROR".to_string())
-                                        }
-                                        (1, _) => match &msg.from {
-                                            Some(user) => {
-                                                let username = user.first_name.clone();
-                                                let mut args =
-                                                    HashMap::<String, OptionValue>::new();
-                                                args.insert("circle".to_string(), true.into());
-                                                let options = RenderOptions {
-                                                    images: None,
-                                                    texts: Some(vec![username]),
-                                                    args: Some(args),
-                                                };
-                                                // match client.render_meme(key.as_str(), options)
-                                                //     .await
-                                                // {
-                                                //     Ok(meme) => {
-                                                //         return send_media(bot, msg, meme, file_id)
-                                                //             .await;
-                                                //     }
-                                                //     Err(e) => e,
-                                                // }
-                                                Error::MemeFeedback("TEST_ERROR".to_string())
-                                            }
-                                            None => Error::ParamsMismatch,
-                                        },
-                                        (_, _) => Error::ParamsMismatch,
-                                    }
-                                }
-                                None => Error::MemeFeedback("Get random meme failed.".to_string()),
-                            }
+            // functions begin
+            async fn get_filtered_memes(
+                with_profile_photo: bool,
+            ) -> Vec<(&'static String, &'static MemeInfo)> {
+                MEME_KEY_INFO_MAPPING
+                    .get()
+                    .unwrap()
+                    .iter()
+                    .filter(|(_, info)| match with_profile_photo {
+                        true => info.params.min_images <= 1 && info.params.min_texts <= 1,
+                        false => info.params.min_images == 0 && info.params.min_texts <= 1,
+                    })
+                    .collect::<Vec<_>>()
+            }
+            async fn render_meme_with_profile_photo(
+                key: &str,
+                file_id: String,
+                file_data: Vec<u8>,
+            ) -> Result<Vec<u8>, Error> {
+                let mut images = HashMap::<String, Vec<u8>>::new();
+                images.insert(file_id.clone(), file_data);
+                let options = RenderOptions {
+                    images: Some(images),
+                    texts: None,
+                    args: Some(HashMap::from([("circle".to_string(), true.into())])),
+                };
+                Ok(CLIENT.render_meme(key, options).await?)
+            }
+            async fn render_meme_with_username(
+                key: &str,
+                username: &str,
+            ) -> Result<Vec<u8>, Error> {
+                let options = RenderOptions {
+                    images: None,
+                    texts: Some(vec![username.to_string()]),
+                    args: Some(HashMap::from([("circle".to_string(), true.into())])),
+                };
+
+                Ok(CLIENT.render_meme(key, options).await?)
+            }
+            // functions end
+
+            if let Ok(photo) = get_sender_profile_photo(bot, msg).await {
+                let mut rng = rand::rng();
+
+                if let Some((file_id, file_data)) = photo {
+                    if let Some((&ref key, &ref info)) = get_filtered_memes(true).await.choose(&mut rng)
+                    {
+                        if let Ok(meme) =
+                            render_meme_with_profile_photo(&key, file_id.clone(), file_data).await
+                        {
+                            return send_media(bot, msg, meme, file_id).await;
                         }
-                        None => {
-                            let mut one_arg_memes = MEME_KEY_INFO_MAPPING
-                                .get()
-                                .unwrap()
-                                .iter()
-                                .filter(|(_, info)| {
-                                    info.params.min_images == 0 && info.params.min_texts <= 1
-                                })
-                                .collect::<Vec<_>>();
-                            one_arg_memes.shuffle(&mut rng);
-                            match one_arg_memes.choose(&mut rng) {
-                                Some(&(key, info)) => match &msg.from {
-                                    Some(user) => {
-                                        let username = user.first_name.clone();
-                                        let mut args = HashMap::<String, OptionValue>::new();
-                                        args.insert("circle".to_string(), true.into());
-                                        let options = RenderOptions {
-                                            images: None,
-                                            texts: Some(vec![username.clone()]),
-                                            args: Some(args),
-                                        };
-                                        // match client.render_meme(key.as_str(), options)
-                                        //     .await
-                                        // {
-                                        //     Ok(meme) => {
-                                        //         return send_media(bot, msg, meme, username).await;
-                                        //     }
-                                        //     Err(e) => e,
-                                        // }
-                                        Error::MemeFeedback("TEST_ERROR.".to_string())
-                                    }
-                                    None => Error::ParamsMismatch,
-                                },
-                                None => Error::MemeFeedback("Get random meme failed.".to_string()),
-                            }
+                    }
+                } else if let Some(user) = &msg.from {
+                    if let Some((&ref key, &ref info)) =
+                        get_filtered_memes(false).await.choose(&mut rng)
+                    {
+                        let username = &user.first_name;
+                        if let Ok(meme) = render_meme_with_username(&key, &user.first_name).await {
+                            return send_media(bot, msg, meme, username.to_string()).await;
                         }
                     }
                 }
-                Err(e) => Error::MemeFeedback(e.to_string()),
             }
+            Error::MemeFeedback("Get random meme failed.".to_string())
+
             // todo!()
         }
         MemeAction::Generate => {
