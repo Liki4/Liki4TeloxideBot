@@ -68,7 +68,7 @@ pub async fn handler(
         },
         MemeAction::Random => {
             // functions begin
-            async fn get_filtered_memes(
+            fn get_filtered_memes(
                 with_profile_photo: bool,
             ) -> Vec<(&'static String, &'static MemeInfo)> {
                 MEME_KEY_INFO_MAPPING
@@ -113,7 +113,7 @@ pub async fn handler(
                 let mut rng = rand::rng();
 
                 if let Some((file_id, file_data)) = photo {
-                    if let Some((&ref key, &ref info)) = get_filtered_memes(true).await.choose(&mut rng)
+                    if let Some((&ref key, &ref info)) = get_filtered_memes(true).choose(&mut rng)
                     {
                         if let Ok(meme) =
                             render_meme_with_profile_photo(&key, file_id.clone(), file_data).await
@@ -123,7 +123,7 @@ pub async fn handler(
                     }
                 } else if let Some(user) = &msg.from {
                     if let Some((&ref key, &ref info)) =
-                        get_filtered_memes(false).await.choose(&mut rng)
+                        get_filtered_memes(false).choose(&mut rng)
                     {
                         let username = &user.first_name;
                         if let Ok(meme) = render_meme_with_username(&key, &user.first_name).await {
