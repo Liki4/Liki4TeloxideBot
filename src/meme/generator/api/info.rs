@@ -4,7 +4,7 @@ use meme_generator::meme::MemeInfo;
 use std::collections::HashMap;
 
 impl MemeApiClient {
-        pub async fn get_infos_impl(&self) -> Result<HashMap<String, MemeInfo>, Error> {
+    pub async fn get_infos_impl(&self) -> Result<HashMap<String, MemeInfo>, Error> {
         let keys = self.get_keys_impl().await?;
         let mut infos: HashMap<String, MemeInfo> = HashMap::new();
         for key in keys {

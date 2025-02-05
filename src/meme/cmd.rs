@@ -7,7 +7,6 @@ use meme_generator::meme::{MemeInfo, OptionValue};
 use rand::prelude::*;
 use std::collections::HashMap;
 use teloxide::prelude::*;
-use teloxide::types::InputFile;
 use teloxide::types::ParseMode::MarkdownV2;
 use teloxide::utils::markdown::escape;
 
@@ -85,9 +84,9 @@ pub async fn handler(
                                         && info.params.max_texts == 0
                                         && info.params.min_texts == 0)
                                         || (info.params.max_texts == 1
-                                        && info.params.min_texts == 1
-                                        && info.params.max_images == 0
-                                        && info.params.min_images == 0)
+                                            && info.params.min_texts == 1
+                                            && info.params.max_images == 0
+                                            && info.params.min_images == 0)
                                 })
                                 .collect::<Vec<_>>();
                             one_arg_memes.shuffle(&mut rng);

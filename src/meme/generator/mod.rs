@@ -6,12 +6,11 @@ pub mod types;
 
 use super::generator::interface::MemeGeneratorApi;
 use super::generator::{api::client::MemeApiClient, local::client::MemeClient};
-use crate::meme::generator::error::Error;
 use lazy_static::lazy_static;
+use meme_generator::meme::MemeInfo;
 use meme_generator::resources::check_resources;
 use std::collections::HashMap;
 use std::env;
-use meme_generator::meme::MemeInfo;
 use tokio::sync::{Mutex, OnceCell};
 
 lazy_static! {
@@ -61,6 +60,7 @@ pub async fn init_meme_mapping() {
         .get_or_init(|| async {
             log::info!("Info mapping: {}", meme_key_info_map.len());
             meme_key_info_map
-        }).await;
+        })
+        .await;
     log::info!("Meme mapping initialized!");
 }

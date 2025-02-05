@@ -1,10 +1,9 @@
 mod meme;
 
-use meme_generator::meme::MemeInfo;
-use teloxide::types::ParseMode;
-use teloxide::{prelude::*, utils::command::BotCommands};
-use teloxide::utils::markdown::escape;
 use crate::meme::generator::{init_meme_mapping, init_resources};
+use teloxide::types::ParseMode;
+use teloxide::utils::markdown::escape;
+use teloxide::{prelude::*, utils::command::BotCommands};
 
 #[tokio::main]
 async fn main() {
