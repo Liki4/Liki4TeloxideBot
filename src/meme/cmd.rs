@@ -21,7 +21,7 @@ pub async fn handler(
             Some(key) => {
                 let client = CLIENT.lock().await;
                 let preview = client.render_preview(key).await;
-                let info = client.get_info(key).await;
+                let info = client.get_info(key);
 
                 match (preview, info) {
                     (Ok(preview), Ok(meme_info)) => {
