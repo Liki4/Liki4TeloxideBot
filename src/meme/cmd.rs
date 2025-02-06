@@ -3,9 +3,12 @@ use crate::meme::generator::error::Error;
 use crate::meme::generator::types::RenderOptions;
 use crate::meme::generator::{CLIENT, MEME_KEYWORD_KEY_MAPPING, MEME_KEY_INFO_MAPPING};
 use crate::meme::utils::{get_final_photo_list, get_sender_profile_photo, send_media};
+use futures::executor::block_on;
 use meme_generator::meme::{MemeInfo, OptionValue};
 use rand::prelude::*;
 use std::collections::HashMap;
+use std::future::Future;
+use std::pin::Pin;
 use teloxide::prelude::*;
 use teloxide::types::ParseMode::MarkdownV2;
 use teloxide::utils::markdown::escape;
@@ -81,7 +84,7 @@ pub async fn handler(
                     })
                     .collect::<Vec<_>>()
             }
-            async fn render_meme_with_profile_photo(
+            fn render_meme_with_profile_photo(
                 key: &str,
                 file_id: String,
                 file_data: Vec<u8>,
@@ -93,19 +96,16 @@ pub async fn handler(
                     texts: None,
                     args: Some(HashMap::from([("circle".to_string(), true.into())])),
                 };
-                Ok(CLIENT.render_meme(key, options).await?)
+                block_on(CLIENT.render_meme(key, options))
             }
-            async fn render_meme_with_username(
-                key: &str,
-                username: &str,
-            ) -> Result<Vec<u8>, Error> {
+            fn render_meme_with_username(key: &str, username: &str) -> Result<Vec<u8>, Error> {
                 let options = RenderOptions {
                     images: None,
                     texts: Some(vec![username.to_string()]),
                     args: Some(HashMap::from([("circle".to_string(), true.into())])),
                 };
 
-                Ok(CLIENT.render_meme(key, options).await?)
+                block_on(CLIENT.render_meme(key, options))
             }
             // functions end
 
@@ -113,21 +113,19 @@ pub async fn handler(
                 let mut rng = rand::rng();
 
                 if let Some((file_id, file_data)) = photo {
-                    if let Some((&ref key, &ref info)) = get_filtered_memes(true).choose(&mut rng)
-                    {
+                    if let Some((&ref key, &ref info)) = get_filtered_memes(true).choose(&mut rng) {
                         if let Ok(meme) =
-                            render_meme_with_profile_photo(&key, file_id.clone(), file_data).await
+                            render_meme_with_profile_photo(&key, file_id.clone(), file_data)
                         {
-                            return send_media(bot, msg, meme, file_id).await;
+                            return block_on(send_media(bot, msg, meme, file_id));
                         }
                     }
                 } else if let Some(user) = &msg.from {
-                    if let Some((&ref key, &ref info)) =
-                        get_filtered_memes(false).choose(&mut rng)
+                    if let Some((&ref key, &ref info)) = get_filtered_memes(false).choose(&mut rng)
                     {
                         let username = &user.first_name;
-                        if let Ok(meme) = render_meme_with_username(&key, &user.first_name).await {
-                            return send_media(bot, msg, meme, username.to_string()).await;
+                        if let Ok(meme) = render_meme_with_username(&key, &user.first_name) {
+                            return block_on(send_media(bot, msg, meme, username.to_string()));
                         }
                     }
                 }
