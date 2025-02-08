@@ -1,10 +1,20 @@
+use log::info;
+use md5::{Digest, Md5};
 use std::collections::HashMap;
 use teloxide::net::Download;
 use teloxide::prelude::*;
 use teloxide::types::MessageEntityKind::{Mention, TextMention};
-use teloxide::types::ParseMode::MarkdownV2;
-use teloxide::types::{FileMeta, InputFile, User};
+use teloxide::types::{FileMeta, InputFile, ParseMode, ReplyParameters, User};
 use teloxide::utils::markdown::escape;
+
+pub fn hash_short(filename: &str) -> String {
+    let mut hasher = Md5::new();
+    hasher.update(filename);
+    let hash = hasher.finalize();
+    let hex_hash = base16ct::lower::encode_string(&hash);
+    let final_hash = &hex_hash[0..8];
+    final_hash.to_string()
+}
 
 async fn file_downloader(bot: &Bot, file_meta: &FileMeta) -> ResponseResult<(String, Vec<u8>)> {
     let file = bot.get_file(&file_meta.id).await?;
@@ -14,21 +24,6 @@ async fn file_downloader(bot: &Bot, file_meta: &FileMeta) -> ResponseResult<(Str
     Ok((file_id, file_vec))
 }
 
-// pub async fn get_sender_first_name(bot: &Bot, msg: &Message) -> ResponseResult<Option<String>> {
-//     match &msg.from {
-//         Some(sender) => Ok(Some(sender.first_name.to_string())),
-//         None => {
-//             bot.send_message(
-//                 msg.chat.id,
-//                 escape(&format!("error: user `{user_text}` not found.")),
-//             )
-//                 .parse_mode(MarkdownV2)
-//                 .await?;
-//             Ok(None)
-//         }
-//     }
-// }
-
 pub async fn get_sender_profile_photo(
     bot: &Bot,
     msg: &Message,
@@ -37,7 +32,7 @@ pub async fn get_sender_profile_photo(
         Some(sender) => sender,
         None => {
             bot.send_message(msg.chat.id, "error: msg sender not found.")
-                .parse_mode(MarkdownV2)
+                .reply_parameters(ReplyParameters::new(msg.id))
                 .await?;
             return Ok(None);
         }
@@ -50,12 +45,10 @@ pub async fn get_sender_profile_photo(
     } else {
         bot.send_message(
             msg.chat.id,
-            escape(&format!(
-                "error: user `{}` has no profile photo.",
-                user.first_name
-            )),
+            &format!("error: user `{}` has no profile photo.", user.first_name),
         )
-        .parse_mode(MarkdownV2)
+        .parse_mode(ParseMode::MarkdownV2)
+        .reply_parameters(ReplyParameters::new(msg.id))
         .await?;
         Ok(None)
     }
@@ -90,9 +83,10 @@ pub async fn get_final_photo_list(
                     None => {
                         bot.send_message(
                             msg.chat.id,
-                            escape(&format!("error: user `{user_text}` not found.")),
+                            &format!("error: user `{user_text}` not found."),
                         )
-                        .parse_mode(MarkdownV2)
+                        .parse_mode(ParseMode::MarkdownV2)
+                        .reply_parameters(ReplyParameters::new(msg.id))
                         .await?;
                         return Ok(None);
                     }
@@ -108,12 +102,10 @@ pub async fn get_final_photo_list(
             } else {
                 bot.send_message(
                     msg.chat.id,
-                    escape(&format!(
-                        "error: user `{}` has no profile photo.",
-                        user_text
-                    )),
+                    &format!("error: user `{}` has no profile photo.", user_text),
                 )
-                .parse_mode(MarkdownV2)
+                .parse_mode(ParseMode::MarkdownV2)
+                .reply_parameters(ReplyParameters::new(msg.id))
                 .await?;
                 return Ok(None);
             }
@@ -141,6 +133,7 @@ pub async fn send_media(
     content: Vec<u8>,
     filename: String,
 ) -> ResponseResult<Message> {
+    info!("sending media file: {}B", content.len());
     match infer::get(&content) {
         Some(mime_type) => {
             let extension = mime_type.extension();
@@ -149,20 +142,32 @@ pub async fn send_media(
 
             match mime_type.matcher_type() {
                 infer::MatcherType::Image => match mime_type.mime_type() {
-                    "image/gif" | "image/webp" => bot.send_animation(msg.chat.id, input_file).await,
-                    _ => bot.send_photo(msg.chat.id, input_file).await,
+                    "image/gif" | "image/webp" => {
+                        bot.send_animation(msg.chat.id, input_file)
+                            .reply_parameters(ReplyParameters::new(msg.id))
+                            .await
+                    }
+                    _ => {
+                        bot.send_photo(msg.chat.id, input_file)
+                            .reply_parameters(ReplyParameters::new(msg.id))
+                            .await
+                    }
                 },
-                infer::MatcherType::Video => bot.send_video(msg.chat.id, input_file).await,
+                infer::MatcherType::Video => {
+                    bot.send_video(msg.chat.id, input_file)
+                        .reply_parameters(ReplyParameters::new(msg.id))
+                        .await
+                }
                 _ => {
                     bot.send_message(msg.chat.id, "error: File type is not media.")
-                        .parse_mode(MarkdownV2)
+                        .reply_parameters(ReplyParameters::new(msg.id))
                         .await
                 }
             }
         }
         None => {
             bot.send_message(msg.chat.id, "error: File type unknown.")
-                .parse_mode(MarkdownV2)
+                .reply_parameters(ReplyParameters::new(msg.id))
                 .await
         }
     }

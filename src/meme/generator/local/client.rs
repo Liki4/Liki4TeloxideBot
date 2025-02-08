@@ -22,7 +22,7 @@ impl MemeGeneratorApi for MemeClient {
     async fn get_infos(&self) -> Result<HashMap<String, MemeInfo>, Error> {
         self.get_infos_impl().await
     }
-    
+
     async fn render_list(&self) -> Result<Vec<u8>, Error> {
         self.render_list_impl().await
     }

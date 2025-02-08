@@ -1,6 +1,7 @@
 use crate::meme::generator::api::client::{MemeApiClient, PostBody};
 use crate::meme::generator::error::Error;
 use crate::meme::generator::types::RenderOptions;
+use crate::meme::utils::hash_short;
 use reqwest::multipart::{Form, Part};
 
 impl MemeApiClient {
@@ -15,7 +16,7 @@ impl MemeApiClient {
                 let mime_type = infer::get(&file_content).expect("file type is unknown");
                 let extension = mime_type.extension();
                 let file_part = Part::bytes(file_content)
-                    .file_name(format!("{file_id}.{extension}"))
+                    .file_name(format!("{}.{extension}", hash_short(&file_id)))
                     .mime_str(mime_type.mime_type())?;
                 form = form.part("images", file_part);
             }

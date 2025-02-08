@@ -1,7 +1,7 @@
 mod meme;
 
 use crate::meme::generator::{init_meme_mapping, init_resources};
-use teloxide::types::ParseMode;
+use teloxide::types::{ParseMode, ReplyParameters};
 use teloxide::utils::markdown::escape;
 use teloxide::{prelude::*, utils::command::BotCommands};
 
@@ -14,7 +14,22 @@ async fn main() {
 
     log::info!("Starting command bot...");
     let bot = Bot::from_env();
-    Command::repl(bot, answer).await;
+
+    let handler = Update::filter_message()
+        .branch(dptree::entry().filter_command::<Command>().endpoint(answer));
+
+    Dispatcher::builder(bot, handler)
+        .default_handler(|upd| async move {
+            log::warn!("Unhandled update: {:?}", upd.id);
+        })
+        .error_handler(LoggingErrorHandler::with_custom_text(
+            "An error has occurred in the dispatcher",
+        ))
+        .enable_ctrlc_handler()
+        .build()
+        .dispatch()
+        .await;
+    // Command::repl(bot, answer).await;
 }
 
 #[derive(BotCommands, Clone)]
@@ -35,14 +50,20 @@ enum Command {
 }
 
 async fn answer(bot: Bot, msg: Message, cmd: Command) -> ResponseResult<()> {
-    match cmd {
-        Command::Help => {
-            bot.send_message(msg.chat.id, escape(&Command::descriptions().to_string()))
-                .parse_mode(ParseMode::MarkdownV2)
-                .await?
-        }
-        Command::Dice => bot.send_dice(msg.chat.id).await?,
-        Command::Meme { action, args } => meme::cmd::handler(&bot, &msg, action, args).await?,
-    };
+    tokio::spawn(async move {
+        let _ = match cmd {
+            Command::Help => {
+                bot.send_message(msg.chat.id, escape(&Command::descriptions().to_string()))
+                    .reply_parameters(ReplyParameters::new(msg.id))
+                    .await
+            }
+            Command::Dice => {
+                bot.send_dice(msg.chat.id)
+                    .reply_parameters(ReplyParameters::new(msg.id))
+                    .await
+            }
+            Command::Meme { action, args } => meme::cmd::handler(&bot, &msg, action, args).await,
+        };
+    });
     Ok(())
 }

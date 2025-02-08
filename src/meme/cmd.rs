@@ -10,7 +10,7 @@ use std::collections::HashMap;
 use std::future::Future;
 use std::pin::Pin;
 use teloxide::prelude::*;
-use teloxide::types::ParseMode::MarkdownV2;
+use teloxide::types::{ParseMode, ReplyParameters};
 use teloxide::utils::markdown::escape;
 
 pub async fn handler(
@@ -21,32 +21,39 @@ pub async fn handler(
 ) -> ResponseResult<Message> {
     let error = match action {
         MemeAction::Info => match args.first() {
-            Some(key) => {
-                let preview = CLIENT.render_preview(key).await;
-                let info = CLIENT.get_info(key);
+            Some(keyword) => {
+                if let Some(key) = MEME_KEYWORD_KEY_MAPPING.get().unwrap().get(keyword) {
+                    let preview = CLIENT.render_preview(key).await;
+                    let info = CLIENT.get_info(key);
 
-                match (preview, info) {
-                    (Ok(preview), Ok(meme_info)) => {
-                        send_media(bot, msg, preview, key.to_string()).await?;
+                    match (preview, info) {
+                        (Ok(preview), Ok(meme_info)) => {
+                            send_media(bot, msg, preview, key.to_string()).await?;
 
-                        let size = size_of_val(&meme_info);
-                        log::info!("{}", size);
+                            let size = size_of_val(&meme_info);
+                            log::info!("{}", size);
 
-                        match serde_json::to_string_pretty(&meme_info) {
-                            Ok(meme_info_str) => {
-                                return bot
-                                    .send_message(
-                                        msg.chat.id,
-                                        escape(&format!("```json\n{}\n```", meme_info_str)),
-                                    )
-                                    .parse_mode(MarkdownV2)
-                                    .await;
+                            match serde_json::to_string_pretty(&meme_info) {
+                                Ok(meme_info_str) => {
+                                    return bot
+                                        .send_message(
+                                            msg.chat.id,
+                                            &format!("```json\n{}\n```", meme_info_str),
+                                        )
+                                        .parse_mode(ParseMode::MarkdownV2)
+                                        .reply_parameters(ReplyParameters::new(msg.id))
+                                        .await;
+                                }
+                                Err(_) => {
+                                    Error::MemeFeedback("MemeInfo Serialize failed.".to_string())
+                                }
                             }
-                            Err(_) => Error::MemeFeedback("MemeInfo Serialize failed.".to_string()),
                         }
+                        (Err(err), _) => err,
+                        (_, Err(err)) => err,
                     }
-                    (Err(err), _) => err,
-                    (_, Err(err)) => err,
+                } else {
+                    Error::NoSuchMeme(keyword.clone())
                 }
             }
             None => Error::ArgMismatch,
@@ -62,7 +69,7 @@ pub async fn handler(
                 if let Some(key) = MEME_KEYWORD_KEY_MAPPING.get().unwrap().get(keyword) {
                     return bot
                         .send_message(msg.chat.id, escape(key))
-                        .parse_mode(MarkdownV2)
+                        .parse_mode(ParseMode::MarkdownV2)
                         .await;
                 }
                 Error::NoSuchMeme(keyword.clone())
@@ -79,8 +86,8 @@ pub async fn handler(
                     .unwrap()
                     .iter()
                     .filter(|(_, info)| match with_profile_photo {
-                        true => info.params.min_images <= 1 && info.params.min_texts <= 1,
-                        false => info.params.min_images == 0 && info.params.min_texts <= 1,
+                        true => info.params.min_images == 1 && info.params.min_texts == 0,
+                        false => info.params.min_images == 0 && info.params.min_texts == 1,
                     })
                     .collect::<Vec<_>>()
             }
@@ -109,30 +116,34 @@ pub async fn handler(
             }
             // functions end
 
+            let mut meme: Result<Vec<u8>, Error> =
+                Err(Error::MemeFeedback("Get random meme failed.".to_string()));
+            let mut filename = String::new();
             if let Ok(photo) = get_sender_profile_photo(bot, msg).await {
                 let mut rng = rand::rng();
 
-                if let Some((file_id, file_data)) = photo {
-                    if let Some((&ref key, &ref info)) = get_filtered_memes(true).choose(&mut rng) {
-                        if let Ok(meme) =
-                            render_meme_with_profile_photo(&key, file_id.clone(), file_data)
+                if let Some(user) = &msg.from {
+                    if let Some((file_id, file_data)) = photo {
+                        if let Some((&ref key, &ref info)) =
+                            get_filtered_memes(true).choose(&mut rng)
                         {
-                            return block_on(send_media(bot, msg, meme, file_id));
+                            meme = render_meme_with_profile_photo(&key, file_id.clone(), file_data);
+                            filename = file_id;
                         }
-                    }
-                } else if let Some(user) = &msg.from {
-                    if let Some((&ref key, &ref info)) = get_filtered_memes(false).choose(&mut rng)
+                    } else if let Some((&ref key, &ref info)) =
+                        get_filtered_memes(false).choose(&mut rng)
                     {
-                        let username = &user.first_name;
-                        if let Ok(meme) = render_meme_with_username(&key, &user.first_name) {
-                            return block_on(send_media(bot, msg, meme, username.to_string()));
-                        }
+                        meme = render_meme_with_username(&key, &user.first_name);
+                        filename = user.first_name.to_string();
                     }
                 }
             }
-            Error::MemeFeedback("Get random meme failed.".to_string())
-
-            // todo!()
+            match meme {
+                Ok(meme) => {
+                    return send_media(bot, msg, meme, filename).await;
+                }
+                Err(e) => e,
+            }
         }
         MemeAction::Generate => {
             let final_photo_list = get_final_photo_list(bot, msg).await?;
@@ -141,6 +152,7 @@ pub async fn handler(
     };
 
     bot.send_message(msg.chat.id, escape(&error.to_string()))
-        .parse_mode(MarkdownV2)
+        .parse_mode(ParseMode::MarkdownV2)
+        .reply_parameters(ReplyParameters::new(msg.id))
         .await
 }

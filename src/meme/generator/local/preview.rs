@@ -9,6 +9,6 @@ impl MemeClient {
             Some(meme) => meme,
             None => return Err(Error::NoSuchMeme(format!("Meme `{key}` not found."))),
         };
-        Ok(meme.generate_preview(HashMap::new())?)
+        Ok(meme.generate_preview(HashMap::from([("circle".to_string(), true.into())]))?)
     }
 }
