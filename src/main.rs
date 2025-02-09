@@ -20,7 +20,7 @@ async fn main() {
 
     Dispatcher::builder(bot, handler)
         .default_handler(|upd| async move {
-            log::warn!("Unhandled update: {:?}", upd.id);
+            log::trace!("Unhandled update: {:?}", upd.id);
         })
         .error_handler(LoggingErrorHandler::with_custom_text(
             "An error has occurred in the dispatcher",

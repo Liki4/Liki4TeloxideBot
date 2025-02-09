@@ -33,21 +33,16 @@ pub async fn handler(
 
                     match (preview, info) {
                         (Ok(preview), Ok(meme_info)) => {
-                            send_media(bot, msg, preview, key.to_string()).await?;
-
-                            let size = size_of_val(&meme_info);
-                            log::info!("{}", size);
-
                             match serde_json::to_string_pretty(&meme_info) {
                                 Ok(meme_info_str) => {
-                                    return bot
-                                        .send_message(
-                                            msg.chat.id,
-                                            &format!("```json\n{}\n```", meme_info_str),
-                                        )
-                                        .parse_mode(ParseMode::MarkdownV2)
-                                        .reply_parameters(ReplyParameters::new(msg.id))
-                                        .await;
+                                    return send_media(
+                                        bot,
+                                        msg,
+                                        preview,
+                                        key.to_string(),
+                                        Some(format!("```json\n{}\n```", meme_info_str)),
+                                    )
+                                    .await;
                                 }
                                 Err(_) => {
                                     Error::MemeFeedback("MemeInfo Serialize failed".to_string())
@@ -65,7 +60,7 @@ pub async fn handler(
         },
         MemeAction::List => match CLIENT.render_list().await {
             Ok(meme_list) => {
-                return send_media(bot, msg, meme_list, "meme_list".to_string()).await;
+                return send_media(bot, msg, meme_list, "meme_list".to_string(), None).await;
             }
             Err(e) => e,
         },
@@ -133,19 +128,26 @@ pub async fn handler(
                             get_filtered_memes(true).choose(&mut rng)
                         {
                             meme = render_meme_with_profile_photo(&key, file_id.clone(), file_data);
-                            filename = file_id;
+                            filename = key.to_string();
                         }
                     } else if let Some((&ref key, &ref _info)) =
                         get_filtered_memes(false).choose(&mut rng)
                     {
                         meme = render_meme_with_username(&key, &user.first_name);
-                        filename = user.first_name.to_string();
+                        filename = key.to_string();
                     }
                 }
             }
             match meme {
                 Ok(meme) => {
-                    return send_media(bot, msg, meme, filename).await;
+                    return send_media(
+                        bot,
+                        msg,
+                        meme,
+                        filename.clone(),
+                        Some(format!("`{filename}`")),
+                    )
+                    .await;
                 }
                 Err(e) => e,
             }
@@ -194,7 +196,7 @@ pub async fn handler(
                             }
                             match meme {
                                 Ok(meme) => {
-                                    return send_media(bot, msg, meme, key.to_string()).await;
+                                    return send_media(bot, msg, meme, key.to_string(), None).await;
                                 }
                                 Err(e) => e,
                             }

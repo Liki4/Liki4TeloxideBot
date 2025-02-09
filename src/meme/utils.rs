@@ -144,6 +144,7 @@ pub async fn send_media(
     msg: &Message,
     content: Vec<u8>,
     filename: String,
+    caption: Option<String>,
 ) -> ResponseResult<Message> {
     info!("sending media file: {}B", content.len());
     match infer::get(&content) {
@@ -155,20 +156,29 @@ pub async fn send_media(
             match mime_type.matcher_type() {
                 infer::MatcherType::Image => match mime_type.mime_type() {
                     "image/gif" | "image/webp" => {
-                        bot.send_animation(msg.chat.id, input_file)
-                            .reply_parameters(ReplyParameters::new(msg.id))
-                            .await
+                        let mut action = bot
+                            .send_animation(msg.chat.id, input_file)
+                            .parse_mode(ParseMode::MarkdownV2)
+                            .reply_parameters(ReplyParameters::new(msg.id));
+                        action.caption = caption;
+                        action.await
                     }
                     _ => {
-                        bot.send_photo(msg.chat.id, input_file)
-                            .reply_parameters(ReplyParameters::new(msg.id))
-                            .await
+                        let mut action = bot
+                            .send_photo(msg.chat.id, input_file)
+                            .parse_mode(ParseMode::MarkdownV2)
+                            .reply_parameters(ReplyParameters::new(msg.id));
+                        action.caption = caption;
+                        action.await
                     }
                 },
                 infer::MatcherType::Video => {
-                    bot.send_video(msg.chat.id, input_file)
-                        .reply_parameters(ReplyParameters::new(msg.id))
-                        .await
+                    let mut action = bot
+                        .send_video(msg.chat.id, input_file)
+                        .parse_mode(ParseMode::MarkdownV2)
+                        .reply_parameters(ReplyParameters::new(msg.id));
+                    action.caption = caption;
+                    action.await
                 }
                 _ => {
                     bot.send_message(msg.chat.id, "error: File type is not media")
