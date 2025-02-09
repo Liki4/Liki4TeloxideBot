@@ -42,7 +42,7 @@ enum Command {
     Help,
     #[command(description = "roll a dice.")]
     Dice,
-    #[command(description = "generate memes. photo>mention>reply", parse_with = meme::parser)]
+    #[command(description = "generate memes.", parse_with = meme::parser)]
     Meme {
         action: meme::MemeAction,
         args: Vec<String>,

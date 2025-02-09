@@ -18,7 +18,7 @@ impl MemeClient {
         if let Some(meme) = get_meme(&key) {
             Ok(meme.info())
         } else {
-            Err(Error::NoSuchMeme(format!("Meme `{key}` not found.")))
+            Err(Error::NoSuchMeme(format!("Meme `{key}` not found")))
         }
     }
 }

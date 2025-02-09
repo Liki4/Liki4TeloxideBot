@@ -204,7 +204,7 @@ impl Default for RenderMemeListRequest {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RenderOptions {
-    pub images: Option<HashMap<String, Vec<u8>>>,
+    pub images: Option<Vec<(String, Vec<u8>)>>,
     pub texts: Option<Vec<String>>,
     pub args: Option<HashMap<String, OptionValue>>,
 }

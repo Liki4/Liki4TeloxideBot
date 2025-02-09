@@ -31,7 +31,7 @@ pub async fn get_sender_profile_photo(
     let user = match &msg.from {
         Some(sender) => sender,
         None => {
-            bot.send_message(msg.chat.id, "error: msg sender not found.")
+            bot.send_message(msg.chat.id, "error: msg sender not found")
                 .reply_parameters(ReplyParameters::new(msg.id))
                 .await?;
             return Ok(None);
@@ -45,7 +45,7 @@ pub async fn get_sender_profile_photo(
     } else {
         bot.send_message(
             msg.chat.id,
-            &format!("error: user `{}` has no profile photo.", user.first_name),
+            &format!("error: user `{}` has no profile photo", user.first_name),
         )
         .parse_mode(ParseMode::MarkdownV2)
         .reply_parameters(ReplyParameters::new(msg.id))
@@ -57,8 +57,8 @@ pub async fn get_sender_profile_photo(
 pub async fn get_final_photo_list(
     bot: &Bot,
     msg: &Message,
-) -> ResponseResult<Option<HashMap<String, Vec<u8>>>> {
-    let mut final_photo_list = HashMap::<String, Vec<u8>>::new();
+) -> ResponseResult<Option<Vec<(String, Vec<u8>)>>> {
+    let mut final_photo_list = Vec::<(String, Vec<u8>)>::new();
 
     let entities = msg.entities().unwrap_or_default();
     let msg_mentioned_users: HashMap<String, User> = msg
@@ -83,7 +83,7 @@ pub async fn get_final_photo_list(
                     None => {
                         bot.send_message(
                             msg.chat.id,
-                            &format!("error: user `{user_text}` not found."),
+                            &format!("error: user `{user_text}` not found"),
                         )
                         .parse_mode(ParseMode::MarkdownV2)
                         .reply_parameters(ReplyParameters::new(msg.id))
@@ -98,11 +98,11 @@ pub async fn get_final_photo_list(
             if let Some(profile_photo_list) = profile_photos.photos.first() {
                 let profile_photo = profile_photo_list.last().unwrap();
                 let (id, data) = file_downloader(bot, &profile_photo.file).await?;
-                final_photo_list.insert(id, data);
+                final_photo_list.push((id, data));
             } else {
                 bot.send_message(
                     msg.chat.id,
-                    &format!("error: user `{}` has no profile photo.", user_text),
+                    &format!("error: user `{}` has no profile photo", user_text),
                 )
                 .parse_mode(ParseMode::MarkdownV2)
                 .reply_parameters(ReplyParameters::new(msg.id))
@@ -116,11 +116,17 @@ pub async fn get_final_photo_list(
         if let Some(photos) = replied_msg.photo() {
             let replied_photo = photos.last().unwrap();
             let (id, data) = file_downloader(bot, &replied_photo.file).await?;
-            final_photo_list.insert(id, data);
+            final_photo_list.push((id, data));
         }
         if let Some(animation) = replied_msg.animation() {
             let (id, data) = file_downloader(bot, &animation.file).await?;
-            final_photo_list.insert(id, data);
+            final_photo_list.push((id, data));
+        }
+    }
+
+    if let Ok(sender_profile_photo) = get_sender_profile_photo(bot, msg).await {
+        if let Some((id, data)) = sender_profile_photo {
+            final_photo_list.push((id, data));
         }
     }
 
@@ -159,14 +165,14 @@ pub async fn send_media(
                         .await
                 }
                 _ => {
-                    bot.send_message(msg.chat.id, "error: File type is not media.")
+                    bot.send_message(msg.chat.id, "error: File type is not media")
                         .reply_parameters(ReplyParameters::new(msg.id))
                         .await
                 }
             }
         }
         None => {
-            bot.send_message(msg.chat.id, "error: File type unknown.")
+            bot.send_message(msg.chat.id, "error: File type unknown")
                 .reply_parameters(ReplyParameters::new(msg.id))
                 .await
         }

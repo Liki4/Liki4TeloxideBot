@@ -13,10 +13,10 @@ impl MemeClient {
     ) -> Result<Vec<u8>, Error> {
         let meme = match get_meme(key) {
             Some(meme) => meme,
-            None => return Err(Error::NoSuchMeme(format!("Meme `{key}` not found."))),
+            None => return Err(Error::NoSuchMeme(format!("Meme `{key}` not found"))),
         };
 
-        let id_to_data = options.images.unwrap_or(HashMap::new());
+        let id_to_data = options.images.unwrap_or(Vec::new());
 
         let mut images: Vec<meme::Image> = Vec::new();
         id_to_data.iter().for_each(|(name, data)| {

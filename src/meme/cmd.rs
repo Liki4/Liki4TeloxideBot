@@ -17,7 +17,7 @@ pub async fn handler(
     bot: &Bot,
     msg: &Message,
     action: MemeAction,
-    args: Vec<String>,
+    mut args: Vec<String>,
 ) -> ResponseResult<Message> {
     let error = match action {
         MemeAction::Info => match args.first() {
@@ -45,7 +45,7 @@ pub async fn handler(
                                         .await;
                                 }
                                 Err(_) => {
-                                    Error::MemeFeedback("MemeInfo Serialize failed.".to_string())
+                                    Error::MemeFeedback("MemeInfo Serialize failed".to_string())
                                 }
                             }
                         }
@@ -96,8 +96,8 @@ pub async fn handler(
                 file_id: String,
                 file_data: Vec<u8>,
             ) -> Result<Vec<u8>, Error> {
-                let mut images = HashMap::<String, Vec<u8>>::new();
-                images.insert(file_id.clone(), file_data);
+                let mut images = Vec::<(String, Vec<u8>)>::new();
+                images.push((file_id.clone(), file_data));
                 let options = RenderOptions {
                     images: Some(images),
                     texts: None,
@@ -117,7 +117,7 @@ pub async fn handler(
             // functions end
 
             let mut meme: Result<Vec<u8>, Error> =
-                Err(Error::MemeFeedback("Get random meme failed.".to_string()));
+                Err(Error::MemeFeedback("Get random meme failed".to_string()));
             let mut filename = String::new();
             if let Ok(photo) = get_sender_profile_photo(bot, msg).await {
                 let mut rng = rand::rng();
@@ -146,8 +146,38 @@ pub async fn handler(
             }
         }
         MemeAction::Generate => {
-            let final_photo_list = get_final_photo_list(bot, msg).await?;
-            todo!()
+            match args.first() {
+                Some(keyword) => {
+                    if let Some(key) = MEME_KEYWORD_KEY_MAPPING.get().unwrap().get(keyword) {
+                        match CLIENT.get_info(key) {
+                            Ok(info) => {
+                                let mut meme: Result<Vec<u8>, Error> =
+                                    Err(Error::MemeFeedback("Generate meme failed".to_string()));
+                                if let (Some(photo_list), text_list) = (get_final_photo_list(bot, msg).await?, args[1..].to_vec()) {
+                                    let final_photo_list = photo_list.iter().map(|(id, data)| {(id.to_string(), data.clone())}).take(info.params.max_images as usize).collect::<Vec<(String, Vec<u8>)>>();
+                                    let final_text_list = text_list.iter().map(|s| s.to_string()).take(info.params.max_texts as usize).collect::<Vec<String>>();
+                                    let options = RenderOptions {
+                                        images: {if final_photo_list.len() > 0 {Some(final_photo_list)} else {None}},
+                                        texts: {if final_text_list.len() > 0 {Some(final_text_list)} else {None}},
+                                        args: Some(HashMap::from([("circle".to_string(), true.into())])),
+                                    };
+                                    meme = CLIENT.render_meme(key, options).await;
+                                }
+                                match meme {
+                                    Ok(meme) => {
+                                        return send_media(bot, msg, meme, key.to_string()).await;
+                                    }
+                                    Err(e) => e,
+                                }
+                            }
+                            Err(e) => e,
+                        }
+                    } else {
+                        Error::NoSuchMeme(keyword.clone())
+                    }
+                }
+                None => Error::ArgMismatch,
+            }
         }
     };
 
