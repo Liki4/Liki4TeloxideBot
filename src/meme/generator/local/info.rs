@@ -14,7 +14,7 @@ impl MemeClient {
         }
         Ok(infos)
     }
-    pub(crate) async fn get_info_impl(&self, key: &str) -> Result<MemeInfo, Error> {
+    pub async fn get_info_impl(&self, key: &str) -> Result<MemeInfo, Error> {
         if let Some(meme) = get_meme(&key) {
             Ok(meme.info())
         } else {

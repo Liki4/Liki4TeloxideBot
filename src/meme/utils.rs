@@ -1,4 +1,5 @@
 use {
+    crate::meme::MEDIA_GROUP_MAPPING,
     log::info,
     md5::{Digest, Md5},
     std::collections::HashMap,
@@ -6,7 +7,7 @@ use {
         net::Download,
         prelude::*,
         types::{
-            FileMeta, InputFile,
+            InputFile,
             MessageEntityKind::{Mention, TextMention},
             ParseMode, ReplyParameters, User,
         },
@@ -22,12 +23,11 @@ pub fn hash_short(filename: &str) -> String {
     final_hash.to_string()
 }
 
-async fn file_downloader(bot: &Bot, file_meta: &FileMeta) -> ResponseResult<(String, Vec<u8>)> {
-    let file = bot.get_file(&file_meta.id).await?;
-    let file_id = file_meta.id.clone();
+async fn file_downloader(bot: &Bot, file_id: &str) -> ResponseResult<(String, Vec<u8>)> {
+    let file = bot.get_file(file_id).await?;
     let mut file_vec: Vec<u8> = Vec::new();
     bot.download_file(file.path.as_str(), &mut file_vec).await?;
-    Ok((file_id, file_vec))
+    Ok((file_id.to_string(), file_vec))
 }
 
 pub async fn get_sender_profile_photo(
@@ -46,7 +46,7 @@ pub async fn get_sender_profile_photo(
     let profile_photos = bot.get_user_profile_photos(user.id).await?;
     if let Some(profile_photo_list) = profile_photos.photos.first() {
         let profile_photo = profile_photo_list.last().unwrap();
-        let (file_id, file_data) = file_downloader(bot, &profile_photo.file).await?;
+        let (file_id, file_data) = file_downloader(bot, &profile_photo.file.id).await?;
         Ok(Some((file_id, file_data)))
     } else {
         bot.send_message(
@@ -103,7 +103,7 @@ pub async fn get_final_photo_list(
             let profile_photos = bot.get_user_profile_photos(user.id).await?;
             if let Some(profile_photo_list) = profile_photos.photos.first() {
                 let profile_photo = profile_photo_list.last().unwrap();
-                let (id, data) = file_downloader(bot, &profile_photo.file).await?;
+                let (id, data) = file_downloader(bot, &profile_photo.file.id).await?;
                 final_photo_list.push((id, data));
             } else {
                 bot.send_message(
@@ -119,14 +119,35 @@ pub async fn get_final_photo_list(
     }
 
     if let Some(replied_msg) = msg.reply_to_message() {
-        if let Some(photos) = replied_msg.photo() {
-            let replied_photo = photos.last().unwrap();
-            let (id, data) = file_downloader(bot, &replied_photo.file).await?;
-            final_photo_list.push((id, data));
-        }
-        if let Some(animation) = replied_msg.animation() {
-            let (id, data) = file_downloader(bot, &animation.file).await?;
-            final_photo_list.push((id, data));
+        if let Some(media_group_id) = replied_msg.media_group_id() {
+            match MEDIA_GROUP_MAPPING.get_values(media_group_id) {
+                Some(replied_photo_ids) => {
+                    for replied_photo_id in replied_photo_ids {
+                        let (id, data) = file_downloader(bot, &replied_photo_id).await?;
+                        final_photo_list.push((id, data));
+                    }
+                }
+                None => {
+                    bot.send_message(
+                        msg.chat.id,
+                        &format!("cannot find media group `{media_group_id}`"),
+                    )
+                    .parse_mode(ParseMode::MarkdownV2)
+                    .reply_parameters(ReplyParameters::new(msg.id))
+                    .await?;
+                    return Ok(None);
+                }
+            }
+        } else {
+            if let Some(photos) = replied_msg.photo() {
+                let replied_photo = photos.last().unwrap();
+                let (id, data) = file_downloader(bot, &replied_photo.file.id).await?;
+                final_photo_list.push((id, data));
+            }
+            if let Some(animation) = replied_msg.animation() {
+                let (id, data) = file_downloader(bot, &animation.file.id).await?;
+                final_photo_list.push((id, data));
+            }
         }
     }
 

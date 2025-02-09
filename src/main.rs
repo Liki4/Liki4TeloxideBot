@@ -1,7 +1,11 @@
 mod meme;
 
 use {
-    crate::meme::generator::{init_meme_mapping, init_resources},
+    crate::meme::{
+        generator::{init_meme_mapping, init_resources},
+        MEDIA_GROUP_MAPPING,
+    },
+    std::time::Duration,
     teloxide::{prelude::*, types::ReplyParameters, utils::command::BotCommands},
 };
 
@@ -16,11 +20,25 @@ async fn main() {
     let bot = Bot::from_env();
 
     let handler = Update::filter_message()
-        .branch(dptree::entry().filter_command::<Command>().endpoint(answer));
+        .branch(dptree::entry().filter_command::<Command>().endpoint(answer))
+        .branch(
+            dptree::filter(|msg: Message| {
+                // log::debug!("{:?}", msg);
+                msg.media_group_id().is_some() && msg.photo().is_some()
+            })
+            .endpoint(|msg: Message| async move {
+                MEDIA_GROUP_MAPPING.push_value(
+                    msg.media_group_id().unwrap(),
+                    msg.photo().unwrap().last().unwrap().file.id.clone(),
+                    Duration::from_secs(60),
+                );
+                respond(())
+            }),
+        );
 
     Dispatcher::builder(bot, handler)
         .default_handler(|upd| async move {
-            log::trace!("Unhandled update: {:?}", upd.id);
+            log::trace!("Unhandled update: {:?}", upd);
         })
         .error_handler(LoggingErrorHandler::with_custom_text(
             "An error has occurred in the dispatcher",
@@ -29,7 +47,6 @@ async fn main() {
         .build()
         .dispatch()
         .await;
-    // Command::repl(bot, answer).await;
 }
 
 #[derive(BotCommands, Clone)]
