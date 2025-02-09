@@ -19,6 +19,5 @@ pub trait MemeGeneratorApi {
             .ok_or(Error::NoSuchMeme(key.to_string()))
     }
     async fn render_list(&self) -> Result<Vec<u8>, Error>;
-    async fn get_keys(&self) -> Result<Vec<String>, Error>;
     async fn render_preview(&self, key: &str) -> Result<Vec<u8>, Error>;
 }

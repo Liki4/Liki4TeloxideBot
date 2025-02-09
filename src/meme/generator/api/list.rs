@@ -16,7 +16,7 @@ impl MemeApiClient {
         Ok(response.bytes().await?.to_vec())
     }
 
-    pub async fn get_keys_impl(&self) -> Result<Vec<String>, Error> {
+    pub async fn get_keys(&self) -> Result<Vec<String>, Error> {
         let response = self.get("/memes/keys").await?;
         Ok(response.json::<Vec<String>>().await?)
     }

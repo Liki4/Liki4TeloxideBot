@@ -12,7 +12,7 @@ impl MemeClient {
         Ok(render_meme_list(params)?)
     }
 
-    pub async fn get_keys_impl(&self) -> Vec<String> {
+    pub async fn get_keys(&self) -> Vec<String> {
         let meme_str = get_meme_keys();
         meme_str
             .iter()

@@ -63,10 +63,6 @@ impl MemeGeneratorApi for MemeApiClient {
         self.render_list_impl().await
     }
 
-    async fn get_keys(&self) -> Result<Vec<String>, Error> {
-        self.get_keys_impl().await
-    }
-
     async fn render_preview(&self, key: &str) -> Result<Vec<u8>, Error> {
         self.render_preview_impl(key).await
     }

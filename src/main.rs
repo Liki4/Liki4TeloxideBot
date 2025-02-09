@@ -2,11 +2,7 @@ mod meme;
 
 use {
     crate::meme::generator::{init_meme_mapping, init_resources},
-    teloxide::{
-        prelude::*,
-        types::ReplyParameters,
-        utils::{command::BotCommands, markdown::escape},
-    },
+    teloxide::{prelude::*, types::ReplyParameters, utils::command::BotCommands},
 };
 
 #[tokio::main]
@@ -57,7 +53,7 @@ async fn answer(bot: Bot, msg: Message, cmd: Command) -> ResponseResult<()> {
     tokio::spawn(async move {
         let _ = match cmd {
             Command::Help => {
-                bot.send_message(msg.chat.id, escape(&Command::descriptions().to_string()))
+                bot.send_message(msg.chat.id, &Command::descriptions().to_string())
                     .reply_parameters(ReplyParameters::new(msg.id))
                     .await
             }

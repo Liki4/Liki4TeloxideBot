@@ -6,7 +6,7 @@ use {
 
 impl MemeApiClient {
     pub async fn get_infos_impl(&self) -> Result<HashMap<String, MemeInfo>, Error> {
-        let keys = self.get_keys_impl().await?;
+        let keys = self.get_keys().await?;
         let mut infos: HashMap<String, MemeInfo> = HashMap::new();
         for key in keys {
             let meme_info = self.get_info_impl(&key).await?;
