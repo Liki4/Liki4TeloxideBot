@@ -1,5 +1,6 @@
 mod meme;
 
+use std::env;
 use {
     crate::meme::{
         generator::{init_meme_mapping, init_resources},
@@ -32,7 +33,7 @@ async fn main() {
                 MEDIA_GROUP_MAPPING.push_value(
                     msg.media_group_id().unwrap(),
                     msg.photo().unwrap().last().unwrap().file.id.clone(),
-                    Duration::from_secs(60),
+                    Duration::from_secs(env::var("MEME_MEDIA_GROUP_MAPPING_TIMEOUT").unwrap().parse().unwrap()),
                 );
                 respond(())
             }),
