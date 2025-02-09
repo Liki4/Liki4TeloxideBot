@@ -11,6 +11,8 @@ use {
 
 #[tokio::main]
 async fn main() {
+    dotenvy::dotenv().unwrap();
+
     pretty_env_logger::init();
 
     init_resources().await;
