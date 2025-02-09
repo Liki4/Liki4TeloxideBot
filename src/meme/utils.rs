@@ -10,7 +10,6 @@ use {
             MessageEntityKind::{Mention, TextMention},
             ParseMode, ReplyParameters, User,
         },
-        utils::markdown::escape,
     },
 };
 

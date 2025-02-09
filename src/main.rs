@@ -4,7 +4,7 @@ use {
     crate::meme::generator::{init_meme_mapping, init_resources},
     teloxide::{
         prelude::*,
-        types::{ParseMode, ReplyParameters},
+        types::ReplyParameters,
         utils::{command::BotCommands, markdown::escape},
     },
 };

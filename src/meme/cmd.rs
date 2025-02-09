@@ -8,9 +8,9 @@ use {
         utils::{get_final_photo_list, get_sender_profile_photo, send_media},
     },
     futures::executor::block_on,
-    meme_generator::meme::{MemeInfo, OptionValue},
+    meme_generator::meme::MemeInfo,
     rand::prelude::*,
-    std::{collections::HashMap, future::Future, pin::Pin},
+    std::collections::HashMap,
     teloxide::{
         prelude::*,
         types::{ParseMode, ReplyParameters},
@@ -22,7 +22,7 @@ pub async fn handler(
     bot: &Bot,
     msg: &Message,
     action: MemeAction,
-    mut args: Vec<String>,
+    args: Vec<String>,
 ) -> ResponseResult<Message> {
     let error = match action {
         MemeAction::Info => match args.first() {
@@ -129,13 +129,13 @@ pub async fn handler(
 
                 if let Some(user) = &msg.from {
                     if let Some((file_id, file_data)) = photo {
-                        if let Some((&ref key, &ref info)) =
+                        if let Some((&ref key, &ref _info)) =
                             get_filtered_memes(true).choose(&mut rng)
                         {
                             meme = render_meme_with_profile_photo(&key, file_id.clone(), file_data);
                             filename = file_id;
                         }
-                    } else if let Some((&ref key, &ref info)) =
+                    } else if let Some((&ref key, &ref _info)) =
                         get_filtered_memes(false).choose(&mut rng)
                     {
                         meme = render_meme_with_username(&key, &user.first_name);
