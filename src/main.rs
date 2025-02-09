@@ -1,9 +1,13 @@
 mod meme;
 
-use crate::meme::generator::{init_meme_mapping, init_resources};
-use teloxide::types::{ParseMode, ReplyParameters};
-use teloxide::utils::markdown::escape;
-use teloxide::{prelude::*, utils::command::BotCommands};
+use {
+    crate::meme::generator::{init_meme_mapping, init_resources},
+    teloxide::{
+        prelude::*,
+        types::{ParseMode, ReplyParameters},
+        utils::{command::BotCommands, markdown::escape},
+    },
+};
 
 #[tokio::main]
 async fn main() {

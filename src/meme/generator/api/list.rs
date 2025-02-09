@@ -1,6 +1,8 @@
-use crate::meme::generator::api::client::{MemeApiClient, PostBody};
-use crate::meme::generator::error::Error;
-use crate::meme::generator::types::RenderMemeListRequest;
+use crate::meme::generator::{
+    api::client::{MemeApiClient, PostBody},
+    error::Error,
+    types::RenderMemeListRequest,
+};
 
 impl MemeApiClient {
     pub async fn render_list_impl(&self) -> Result<Vec<u8>, Error> {

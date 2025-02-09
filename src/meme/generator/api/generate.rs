@@ -1,8 +1,14 @@
-use crate::meme::generator::api::client::{MemeApiClient, PostBody};
-use crate::meme::generator::error::Error;
-use crate::meme::generator::types::RenderOptions;
-use crate::meme::utils::hash_short;
-use reqwest::multipart::{Form, Part};
+use {
+    crate::meme::{
+        generator::{
+            api::client::{MemeApiClient, PostBody},
+            error::Error,
+            types::RenderOptions,
+        },
+        utils::hash_short,
+    },
+    reqwest::multipart::{Form, Part},
+};
 
 impl MemeApiClient {
     pub async fn render_meme_impl(

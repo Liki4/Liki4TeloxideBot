@@ -1,6 +1,8 @@
-use reqwest::Response;
-use serde::{Deserialize, Serialize};
-use std::fmt::Display;
+use {
+    reqwest::Response,
+    serde::{Deserialize, Serialize},
+    std::fmt::Display,
+};
 
 #[derive(Debug, Serialize)]
 pub enum Error {

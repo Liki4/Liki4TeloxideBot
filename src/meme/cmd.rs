@@ -1,17 +1,22 @@
-use super::MemeAction;
-use crate::meme::generator::error::Error;
-use crate::meme::generator::types::RenderOptions;
-use crate::meme::generator::{CLIENT, MEME_KEYWORD_KEY_MAPPING, MEME_KEY_INFO_MAPPING};
-use crate::meme::utils::{get_final_photo_list, get_sender_profile_photo, send_media};
-use futures::executor::block_on;
-use meme_generator::meme::{MemeInfo, OptionValue};
-use rand::prelude::*;
-use std::collections::HashMap;
-use std::future::Future;
-use std::pin::Pin;
-use teloxide::prelude::*;
-use teloxide::types::{ParseMode, ReplyParameters};
-use teloxide::utils::markdown::escape;
+use {
+    super::MemeAction,
+    crate::meme::{
+        generator::{
+            error::Error, types::RenderOptions, CLIENT, MEME_KEYWORD_KEY_MAPPING,
+            MEME_KEY_INFO_MAPPING,
+        },
+        utils::{get_final_photo_list, get_sender_profile_photo, send_media},
+    },
+    futures::executor::block_on,
+    meme_generator::meme::{MemeInfo, OptionValue},
+    rand::prelude::*,
+    std::{collections::HashMap, future::Future, pin::Pin},
+    teloxide::{
+        prelude::*,
+        types::{ParseMode, ReplyParameters},
+        utils::markdown::escape,
+    },
+};
 
 pub async fn handler(
     bot: &Bot,
@@ -145,40 +150,63 @@ pub async fn handler(
                 Err(e) => e,
             }
         }
-        MemeAction::Generate => {
-            match args.first() {
-                Some(keyword) => {
-                    if let Some(key) = MEME_KEYWORD_KEY_MAPPING.get().unwrap().get(keyword) {
-                        match CLIENT.get_info(key) {
-                            Ok(info) => {
-                                let mut meme: Result<Vec<u8>, Error> =
-                                    Err(Error::MemeFeedback("Generate meme failed".to_string()));
-                                if let (Some(photo_list), text_list) = (get_final_photo_list(bot, msg).await?, args[1..].to_vec()) {
-                                    let final_photo_list = photo_list.iter().map(|(id, data)| {(id.to_string(), data.clone())}).take(info.params.max_images as usize).collect::<Vec<(String, Vec<u8>)>>();
-                                    let final_text_list = text_list.iter().map(|s| s.to_string()).take(info.params.max_texts as usize).collect::<Vec<String>>();
-                                    let options = RenderOptions {
-                                        images: {if final_photo_list.len() > 0 {Some(final_photo_list)} else {None}},
-                                        texts: {if final_text_list.len() > 0 {Some(final_text_list)} else {None}},
-                                        args: Some(HashMap::from([("circle".to_string(), true.into())])),
-                                    };
-                                    meme = CLIENT.render_meme(key, options).await;
-                                }
-                                match meme {
-                                    Ok(meme) => {
-                                        return send_media(bot, msg, meme, key.to_string()).await;
-                                    }
-                                    Err(e) => e,
-                                }
+        MemeAction::Generate => match args.first() {
+            Some(keyword) => {
+                if let Some(key) = MEME_KEYWORD_KEY_MAPPING.get().unwrap().get(keyword) {
+                    match CLIENT.get_info(key) {
+                        Ok(info) => {
+                            let mut meme: Result<Vec<u8>, Error> =
+                                Err(Error::MemeFeedback("Generate meme failed".to_string()));
+                            if let (Some(photo_list), text_list) =
+                                (get_final_photo_list(bot, msg).await?, args[1..].to_vec())
+                            {
+                                let final_photo_list = photo_list
+                                    .iter()
+                                    .map(|(id, data)| (id.to_string(), data.clone()))
+                                    .take(info.params.max_images as usize)
+                                    .collect::<Vec<(String, Vec<u8>)>>();
+                                let final_text_list = text_list
+                                    .iter()
+                                    .map(|s| s.to_string())
+                                    .take(info.params.max_texts as usize)
+                                    .collect::<Vec<String>>();
+                                let options = RenderOptions {
+                                    images: {
+                                        if final_photo_list.len() > 0 {
+                                            Some(final_photo_list)
+                                        } else {
+                                            None
+                                        }
+                                    },
+                                    texts: {
+                                        if final_text_list.len() > 0 {
+                                            Some(final_text_list)
+                                        } else {
+                                            None
+                                        }
+                                    },
+                                    args: Some(HashMap::from([(
+                                        "circle".to_string(),
+                                        true.into(),
+                                    )])),
+                                };
+                                meme = CLIENT.render_meme(key, options).await;
                             }
-                            Err(e) => e,
+                            match meme {
+                                Ok(meme) => {
+                                    return send_media(bot, msg, meme, key.to_string()).await;
+                                }
+                                Err(e) => e,
+                            }
                         }
-                    } else {
-                        Error::NoSuchMeme(keyword.clone())
+                        Err(e) => e,
                     }
+                } else {
+                    Error::NoSuchMeme(keyword.clone())
                 }
-                None => Error::ArgMismatch,
             }
-        }
+            None => Error::ArgMismatch,
+        },
     };
 
     bot.send_message(msg.chat.id, escape(&error.to_string()))

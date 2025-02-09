@@ -1,13 +1,15 @@
-use std::error::Error;
-use std::fmt;
-use std::fmt::{Display, Formatter};
-use std::str::FromStr;
-use teloxide::utils::command::ParseError;
-use teloxide::utils::command::ParseError::IncorrectFormat;
-
 pub mod cmd;
 pub mod generator;
 mod utils;
+
+use {
+    std::{
+        error::Error,
+        fmt::{self, Display, Formatter},
+        str::FromStr,
+    },
+    teloxide::utils::command::{ParseError, ParseError::IncorrectFormat},
+};
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum MemeAction {

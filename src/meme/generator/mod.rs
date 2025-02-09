@@ -4,15 +4,15 @@ pub mod interface;
 pub mod local;
 pub mod types;
 
-use super::generator::interface::MemeGeneratorApi;
-use super::generator::{api::client::MemeApiClient, local::client::MemeClient};
-use lazy_static::lazy_static;
-use meme_generator::meme::MemeInfo;
-use meme_generator::resources::check_resources;
-use std::collections::HashMap;
-use std::env;
-use std::sync::Arc;
-use tokio::sync::OnceCell;
+use {
+    super::generator::{
+        api::client::MemeApiClient, interface::MemeGeneratorApi, local::client::MemeClient,
+    },
+    lazy_static::lazy_static,
+    meme_generator::{meme::MemeInfo, resources::check_resources},
+    std::{collections::HashMap, env, sync::Arc},
+    tokio::sync::OnceCell,
+};
 
 lazy_static! {
     pub static ref CLIENT: Arc<dyn MemeGeneratorApi + Send + Sync> = match env::var("MEME_API_URL")

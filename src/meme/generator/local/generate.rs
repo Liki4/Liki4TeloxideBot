@@ -1,9 +1,11 @@
-use crate::meme::generator::error::Error;
-use crate::meme::generator::local::client::MemeClient;
-use crate::meme::generator::types::RenderOptions;
-use crate::meme::utils::hash_short;
-use meme_generator::{get_meme, meme};
-use std::collections::HashMap;
+use {
+    crate::meme::{
+        generator::{error::Error, local::client::MemeClient, types::RenderOptions},
+        utils::hash_short,
+    },
+    meme_generator::{get_meme, meme},
+    std::collections::HashMap,
+};
 
 impl MemeClient {
     pub async fn render_meme_impl(

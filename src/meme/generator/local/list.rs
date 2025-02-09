@@ -1,7 +1,10 @@
-use crate::meme::generator::error::Error;
-use crate::meme::generator::local::client::MemeClient;
-use meme_generator::get_meme_keys;
-use meme_generator::tools::{render_meme_list, RenderMemeListParams};
+use {
+    crate::meme::generator::{error::Error, local::client::MemeClient},
+    meme_generator::{
+        get_meme_keys,
+        tools::{render_meme_list, RenderMemeListParams},
+    },
+};
 
 impl MemeClient {
     pub async fn render_list_impl(&self) -> Result<Vec<u8>, Error> {

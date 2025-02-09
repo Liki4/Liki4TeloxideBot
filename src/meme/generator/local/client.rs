@@ -1,9 +1,9 @@
-use crate::meme::generator::error::Error;
-use crate::meme::generator::interface::MemeGeneratorApi;
-use crate::meme::generator::types::RenderOptions;
-use async_trait::async_trait;
-use meme_generator::meme::MemeInfo;
-use std::collections::HashMap;
+use {
+    crate::meme::generator::{error::Error, interface::MemeGeneratorApi, types::RenderOptions},
+    async_trait::async_trait,
+    meme_generator::meme::MemeInfo,
+    std::collections::HashMap,
+};
 
 pub struct MemeClient {}
 

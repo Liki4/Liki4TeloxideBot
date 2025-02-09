@@ -1,12 +1,15 @@
-use crate::meme::generator::error::{response_handler, Error};
-use crate::meme::generator::interface::MemeGeneratorApi;
-use crate::meme::generator::types::RenderOptions;
-use async_trait::async_trait;
-use meme_generator::meme::MemeInfo;
-use reqwest::multipart::Form;
-use reqwest::{Client, Response};
-use serde_json::Value;
-use std::collections::HashMap;
+use {
+    crate::meme::generator::{
+        error::{response_handler, Error},
+        interface::MemeGeneratorApi,
+        types::RenderOptions,
+    },
+    async_trait::async_trait,
+    meme_generator::meme::MemeInfo,
+    reqwest::{multipart::Form, Client, Response},
+    serde_json::Value,
+    std::collections::HashMap,
+};
 
 pub struct MemeApiClient {
     base_url: String,

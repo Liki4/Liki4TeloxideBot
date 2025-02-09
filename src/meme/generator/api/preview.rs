@@ -1,5 +1,4 @@
-use crate::meme::generator::api::client::MemeApiClient;
-use crate::meme::generator::error::Error;
+use crate::meme::generator::{api::client::MemeApiClient, error::Error};
 
 impl MemeApiClient {
     pub async fn render_preview_impl(&self, key: &str) -> Result<Vec<u8>, Error> {

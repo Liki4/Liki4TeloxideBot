@@ -1,11 +1,18 @@
-use log::info;
-use md5::{Digest, Md5};
-use std::collections::HashMap;
-use teloxide::net::Download;
-use teloxide::prelude::*;
-use teloxide::types::MessageEntityKind::{Mention, TextMention};
-use teloxide::types::{FileMeta, InputFile, ParseMode, ReplyParameters, User};
-use teloxide::utils::markdown::escape;
+use {
+    log::info,
+    md5::{Digest, Md5},
+    std::collections::HashMap,
+    teloxide::{
+        net::Download,
+        prelude::*,
+        types::{
+            FileMeta, InputFile,
+            MessageEntityKind::{Mention, TextMention},
+            ParseMode, ReplyParameters, User,
+        },
+        utils::markdown::escape,
+    },
+};
 
 pub fn hash_short(filename: &str) -> String {
     let mut hasher = Md5::new();

@@ -1,8 +1,8 @@
-use crate::meme::generator::error::Error;
-use crate::meme::generator::local::client::MemeClient;
-use meme_generator::meme::MemeInfo;
-use meme_generator::{get_meme, get_meme_keys};
-use std::collections::HashMap;
+use {
+    crate::meme::generator::{error::Error, local::client::MemeClient},
+    meme_generator::{get_meme, get_meme_keys, meme::MemeInfo},
+    std::collections::HashMap,
+};
 
 impl MemeClient {
     pub async fn get_infos_impl(&self) -> Result<HashMap<String, MemeInfo>, Error> {

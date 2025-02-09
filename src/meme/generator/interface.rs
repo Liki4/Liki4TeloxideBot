@@ -1,8 +1,10 @@
-use super::{error::Error, MEME_KEY_INFO_MAPPING};
-use crate::meme::generator::types::RenderOptions;
-use async_trait::async_trait;
-use meme_generator::meme::MemeInfo;
-use std::collections::HashMap;
+use {
+    super::{error::Error, MEME_KEY_INFO_MAPPING},
+    crate::meme::generator::types::RenderOptions,
+    async_trait::async_trait,
+    meme_generator::meme::MemeInfo,
+    std::collections::HashMap,
+};
 
 #[async_trait]
 pub trait MemeGeneratorApi {
