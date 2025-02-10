@@ -3,6 +3,12 @@ name = "liki4_teloxide_bot"
 version = "0.1.0"
 edition = "2021"
 
+[profile.release]
+strip = true
+opt-level = "z"
+lto = true
+codegen-units = 1
+
 [dependencies]
 teloxide = { version = "0.13", features = ["macros"] }
 log = "0.4"
