@@ -1,17 +1,22 @@
 use {
     crate::meme::{
-        generator::{error::Error, local::client::MemeClient, types::RenderOptions},
+        generator::{
+            error::Error,
+            local::client::MemeClient,
+            types::RenderOptions,
+        },
         utils::hash_short,
     },
-    meme_generator::{get_meme, meme},
+    meme_generator::{
+        get_meme,
+        meme,
+    },
     std::collections::HashMap,
 };
 
 impl MemeClient {
     pub async fn render_meme_impl(
-        &self,
-        key: &str,
-        options: RenderOptions,
+        &self, key: &str, options: RenderOptions,
     ) -> Result<Vec<u8>, Error> {
         let meme = match get_meme(key) {
             Some(meme) => meme,

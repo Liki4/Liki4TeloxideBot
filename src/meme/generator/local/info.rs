@@ -1,6 +1,12 @@
 use {
-    crate::meme::generator::{error::Error, local::client::MemeClient},
-    meme_generator::{get_meme, meme::MemeInfo},
+    crate::meme::generator::{
+        error::Error,
+        local::client::MemeClient,
+    },
+    meme_generator::{
+        get_meme,
+        meme::MemeInfo,
+    },
     std::collections::HashMap,
 };
 

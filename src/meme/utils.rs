@@ -1,15 +1,23 @@
 use {
-    crate::meme::MEDIA_GROUP_MAPPING,
+    crate::bot::util::MEDIA_GROUP_MAPPING,
     log::info,
-    md5::{Digest, Md5},
+    md5::{
+        Digest,
+        Md5,
+    },
     std::collections::HashMap,
     teloxide::{
         net::Download,
         prelude::*,
         types::{
             InputFile,
-            MessageEntityKind::{Mention, TextMention},
-            ParseMode, ReplyParameters, User,
+            MessageEntityKind::{
+                Mention,
+                TextMention,
+            },
+            ParseMode,
+            ReplyParameters,
+            User,
         },
     },
 };
@@ -31,8 +39,7 @@ async fn file_downloader(bot: &Bot, file_id: &str) -> ResponseResult<(String, Ve
 }
 
 pub async fn get_sender_profile_photo(
-    bot: &Bot,
-    msg: &Message,
+    bot: &Bot, msg: &Message,
 ) -> ResponseResult<Option<(String, Vec<u8>)>> {
     let user = match &msg.from {
         Some(sender) => sender,
@@ -61,10 +68,30 @@ pub async fn get_sender_profile_photo(
 }
 
 pub async fn get_final_photo_list(
-    bot: &Bot,
-    msg: &Message,
+    bot: &Bot, msg: &Message,
 ) -> ResponseResult<Option<Vec<(String, Vec<u8>)>>> {
     let mut final_photo_list = Vec::<(String, Vec<u8>)>::new();
+
+    if let Some(media_group_id) = msg.media_group_id() {
+        match MEDIA_GROUP_MAPPING.get_values(media_group_id) {
+            Some(photo_ids) => {
+                for photo_id in photo_ids {
+                    let (id, data) = file_downloader(bot, &photo_id).await?;
+                    final_photo_list.push((id, data));
+                }
+            }
+            None => {
+                bot.send_message(
+                    msg.chat.id,
+                    &format!("cannot find media group `{media_group_id}` from message"),
+                )
+                .parse_mode(ParseMode::MarkdownV2)
+                .reply_parameters(ReplyParameters::new(msg.id))
+                .await?;
+                return Ok(None);
+            }
+        }
+    }
 
     let entities = msg.entities().unwrap_or_default();
     let msg_mentioned_users: HashMap<String, User> = msg
@@ -130,7 +157,7 @@ pub async fn get_final_photo_list(
                 None => {
                     bot.send_message(
                         msg.chat.id,
-                        &format!("cannot find media group `{media_group_id}`"),
+                        &format!("cannot find media group `{media_group_id}` from replied message"),
                     )
                     .parse_mode(ParseMode::MarkdownV2)
                     .reply_parameters(ReplyParameters::new(msg.id))
@@ -161,11 +188,7 @@ pub async fn get_final_photo_list(
 }
 
 pub async fn send_media(
-    bot: &Bot,
-    msg: &Message,
-    content: Vec<u8>,
-    filename: String,
-    caption: Option<String>,
+    bot: &Bot, msg: &Message, content: Vec<u8>, filename: String, caption: Option<String>,
 ) -> ResponseResult<Message> {
     info!("sending media file: {}B", content.len());
     match infer::get(&content) {

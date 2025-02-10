@@ -1,8 +1,14 @@
 use {
-    crate::meme::generator::{error::Error, local::client::MemeClient},
+    crate::meme::generator::{
+        error::Error,
+        local::client::MemeClient,
+    },
     meme_generator::{
         get_meme_keys,
-        tools::{render_meme_list, RenderMemeListParams},
+        tools::{
+            render_meme_list,
+            RenderMemeListParams,
+        },
     },
 };
 

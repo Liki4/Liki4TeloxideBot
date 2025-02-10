@@ -1,5 +1,9 @@
 use {
-    crate::meme::generator::{error::Error, interface::MemeGeneratorApi, types::RenderOptions},
+    crate::meme::generator::{
+        error::Error,
+        interface::MemeGeneratorApi,
+        types::RenderOptions,
+    },
     async_trait::async_trait,
     meme_generator::meme::MemeInfo,
     std::collections::HashMap,

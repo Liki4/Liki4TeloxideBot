@@ -1,1 +1,7 @@
 imports_granularity = "One"
+group_imports = "One"
+imports_layout = "Vertical"
+comment_width = 100
+format_code_in_doc_comments = true
+wrap_comments = true
+fn_params_layout = "Compressed"

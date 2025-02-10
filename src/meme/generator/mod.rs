@@ -6,11 +6,20 @@ pub mod types;
 
 use {
     super::generator::{
-        api::client::MemeApiClient, interface::MemeGeneratorApi, local::client::MemeClient,
+        api::client::MemeApiClient,
+        interface::MemeGeneratorApi,
+        local::client::MemeClient,
     },
     lazy_static::lazy_static,
-    meme_generator::{meme::MemeInfo, resources::check_resources},
-    std::{collections::HashMap, env, sync::Arc},
+    meme_generator::{
+        meme::MemeInfo,
+        resources::check_resources,
+    },
+    std::{
+        collections::HashMap,
+        env,
+        sync::Arc,
+    },
     tokio::sync::OnceCell,
 };
 

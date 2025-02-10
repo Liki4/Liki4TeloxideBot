@@ -2,10 +2,17 @@ use {
     super::MemeAction,
     crate::meme::{
         generator::{
-            error::Error, types::RenderOptions, CLIENT, MEME_KEYWORD_KEY_MAPPING,
+            error::Error,
+            types::RenderOptions,
+            CLIENT,
+            MEME_KEYWORD_KEY_MAPPING,
             MEME_KEY_INFO_MAPPING,
         },
-        utils::{get_final_photo_list, get_sender_profile_photo, send_media},
+        utils::{
+            get_final_photo_list,
+            get_sender_profile_photo,
+            send_media,
+        },
     },
     futures::executor::block_on,
     meme_generator::meme::MemeInfo,
@@ -13,16 +20,16 @@ use {
     std::collections::HashMap,
     teloxide::{
         prelude::*,
-        types::{ParseMode, ReplyParameters},
+        types::{
+            ParseMode,
+            ReplyParameters,
+        },
         utils::markdown::escape,
     },
 };
 
-pub async fn handler(
-    bot: &Bot,
-    msg: &Message,
-    action: MemeAction,
-    args: Vec<String>,
+pub async fn meme_command_handler(
+    bot: &Bot, msg: &Message, action: MemeAction, args: Vec<String>,
 ) -> ResponseResult<Message> {
     let error = match action {
         MemeAction::Info => match args.first() {
@@ -92,9 +99,7 @@ pub async fn handler(
                     .collect::<Vec<_>>()
             }
             fn render_meme_with_profile_photo(
-                key: &str,
-                file_id: String,
-                file_data: Vec<u8>,
+                key: &str, file_id: String, file_data: Vec<u8>,
             ) -> Result<Vec<u8>, Error> {
                 let mut images = Vec::<(String, Vec<u8>)>::new();
                 images.push((file_id.clone(), file_data));

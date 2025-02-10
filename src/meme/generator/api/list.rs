@@ -1,5 +1,8 @@
 use crate::meme::generator::{
-    api::client::{MemeApiClient, PostBody},
+    api::client::{
+        MemeApiClient,
+        PostBody,
+    },
     error::Error,
     types::RenderMemeListRequest,
 };

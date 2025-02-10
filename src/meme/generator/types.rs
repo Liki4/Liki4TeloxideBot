@@ -1,6 +1,9 @@
 use {
     meme_generator::meme::OptionValue,
-    serde::{Deserialize, Serialize},
+    serde::{
+        Deserialize,
+        Serialize,
+    },
     std::collections::HashMap,
 };
 

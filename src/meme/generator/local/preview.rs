@@ -1,5 +1,8 @@
 use {
-    crate::meme::generator::{error::Error, local::client::MemeClient},
+    crate::meme::generator::{
+        error::Error,
+        local::client::MemeClient,
+    },
     meme_generator::get_meme,
     std::collections::HashMap,
 };

@@ -1,12 +1,19 @@
 use {
     crate::meme::generator::{
-        error::{response_handler, Error},
+        error::{
+            response_handler,
+            Error,
+        },
         interface::MemeGeneratorApi,
         types::RenderOptions,
     },
     async_trait::async_trait,
     meme_generator::meme::MemeInfo,
-    reqwest::{multipart::Form, Client, Response},
+    reqwest::{
+        multipart::Form,
+        Client,
+        Response,
+    },
     serde_json::Value,
     std::collections::HashMap,
 };

@@ -1,6 +1,9 @@
 use {
     reqwest::Response,
-    serde::{Deserialize, Serialize},
+    serde::{
+        Deserialize,
+        Serialize,
+    },
     std::fmt::Display,
 };
 

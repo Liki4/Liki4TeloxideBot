@@ -1,13 +1,25 @@
+mod bot;
 mod meme;
 
-use std::env;
 use {
-    crate::meme::{
-        generator::{init_meme_mapping, init_resources},
-        MEDIA_GROUP_MAPPING,
+    crate::{
+        bot::handler::endpoint::{
+            media_group_handler,
+            media_group_with_command_handler,
+        },
+        meme::generator::{
+            init_meme_mapping,
+            init_resources,
+        },
     },
-    std::time::Duration,
-    teloxide::{prelude::*, types::ReplyParameters, utils::command::BotCommands},
+    bot::handler::{
+        command,
+        command::Command,
+    },
+    teloxide::{
+        prelude::*,
+        utils::command::BotCommands,
+    },
 };
 
 #[tokio::main]
@@ -23,20 +35,21 @@ async fn main() {
     let bot = Bot::from_env();
 
     let handler = Update::filter_message()
-        .branch(dptree::entry().filter_command::<Command>().endpoint(answer))
         .branch(
-            dptree::filter(|msg: Message| {
-                // log::debug!("{:?}", msg);
-                msg.media_group_id().is_some() && msg.photo().is_some()
-            })
-            .endpoint(|msg: Message| async move {
-                MEDIA_GROUP_MAPPING.push_value(
-                    msg.media_group_id().unwrap(),
-                    msg.photo().unwrap().last().unwrap().file.id.clone(),
-                    Duration::from_secs(env::var("MEME_MEDIA_GROUP_MAPPING_TIMEOUT").unwrap().parse().unwrap()),
-                );
-                respond(())
-            }),
+            dptree::entry()
+                .filter_command::<Command>()
+                .endpoint(command::command_handler),
+        )
+        .branch(
+            dptree::filter(|msg: Message| msg.media_group_id().is_some() && msg.photo().is_some())
+                .branch(
+                    dptree::filter(|msg: Message| {
+                        msg.caption()
+                            .map_or(false, |caption| Command::parse(caption, "").is_ok())
+                    })
+                    .endpoint(media_group_with_command_handler),
+                )
+                .branch(dptree::endpoint(media_group_handler)),
         );
 
     Dispatcher::builder(bot, handler)
@@ -50,40 +63,4 @@ async fn main() {
         .build()
         .dispatch()
         .await;
-}
-
-#[derive(BotCommands, Clone)]
-#[command(
-    rename_rule = "lowercase",
-    description = "These commands are supported:"
-)]
-enum Command {
-    #[command(description = "display help.")]
-    Help,
-    #[command(description = "roll a dice.")]
-    Dice,
-    #[command(description = "generate memes.", parse_with = meme::parser)]
-    Meme {
-        action: meme::MemeAction,
-        args: Vec<String>,
-    },
-}
-
-async fn answer(bot: Bot, msg: Message, cmd: Command) -> ResponseResult<()> {
-    tokio::spawn(async move {
-        let _ = match cmd {
-            Command::Help => {
-                bot.send_message(msg.chat.id, &Command::descriptions().to_string())
-                    .reply_parameters(ReplyParameters::new(msg.id))
-                    .await
-            }
-            Command::Dice => {
-                bot.send_dice(msg.chat.id)
-                    .reply_parameters(ReplyParameters::new(msg.id))
-                    .await
-            }
-            Command::Meme { action, args } => meme::cmd::handler(&bot, &msg, action, args).await,
-        };
-    });
-    Ok(())
 }

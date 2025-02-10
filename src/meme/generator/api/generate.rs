@@ -1,20 +1,24 @@
 use {
     crate::meme::{
         generator::{
-            api::client::{MemeApiClient, PostBody},
+            api::client::{
+                MemeApiClient,
+                PostBody,
+            },
             error::Error,
             types::RenderOptions,
         },
         utils::hash_short,
     },
-    reqwest::multipart::{Form, Part},
+    reqwest::multipart::{
+        Form,
+        Part,
+    },
 };
 
 impl MemeApiClient {
     pub async fn render_meme_impl(
-        &self,
-        key: &str,
-        options: RenderOptions,
+        &self, key: &str, options: RenderOptions,
     ) -> Result<Vec<u8>, Error> {
         let mut form = Form::new();
         if let Some(images) = options.images {

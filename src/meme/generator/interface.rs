@@ -1,5 +1,8 @@
 use {
-    super::{error::Error, MEME_KEY_INFO_MAPPING},
+    super::{
+        error::Error,
+        MEME_KEY_INFO_MAPPING,
+    },
     crate::meme::generator::types::RenderOptions,
     async_trait::async_trait,
     meme_generator::meme::MemeInfo,
