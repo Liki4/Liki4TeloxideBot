@@ -2,14 +2,11 @@ mod bot;
 mod meme;
 
 use {
-    crate::{
-        bot::handler::endpoint::{
+    crate::bot::{
+        bot_init,
+        handler::endpoint::{
             media_group_handler,
             media_group_with_command_handler,
-        },
-        meme::generator::{
-            init_meme_mapping,
-            init_resources,
         },
     },
     bot::handler::{
@@ -25,11 +22,9 @@ use {
 #[tokio::main]
 async fn main() {
     dotenvy::dotenv().unwrap();
-
     pretty_env_logger::init();
 
-    init_resources().await;
-    init_meme_mapping().await;
+    bot_init().await;
 
     log::info!("Starting command bot...");
     let bot = Bot::from_env();
