@@ -28,7 +28,7 @@ jobs:
         with:
           use-cross: true
           command: build
-          args: --release --target x86_64-unknown-linux-musl
+          args: --release
 
       - name: Build Image
         shell: bash
@@ -41,5 +41,5 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            target/x86_64-unknown-linux-musl/release/liki4_teloxide_bot
+            target/release/liki4_teloxide_bot
             ${{ env.IMAGE }}
