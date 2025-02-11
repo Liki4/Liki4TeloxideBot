@@ -39,19 +39,20 @@ jobs:
         run: |
           cargo build --release
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Build Image
-        shell: bash
-        run: |
-          docker build -t liki4_teloxide_bot:$VERSION --output=type=docker .
-          docker save liki4_teloxide_bot:$VERSION > liki4_teloxide_bot_$VERSION.tar
-          echo "IMAGE=liki4_teloxide_bot_$VERSION.tar" >> $GITHUB_ENV
-
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
           files: |
             target/release/liki4_teloxide_bot
-            ${{ env.IMAGE }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Image and Upload to Aliyun
+        shell: bash
+        run: |
+          docker build -t liki4_teloxide_bot:$VERSION --output=type=docker .
+          docker version
+          docker login --username=${{ secrets.DOCKER_USERNAME }} --password=${{ secrets.DOCKER_PASSWORD }} registry.cn-hongkong.aliyuncs.com
+          docker tag liki4_teloxide_bot:$VERSION registry.cn-hongkong.aliyuncs.com/liki4/teloxide_bot:$VERSION
+          docker push registry.cn-hongkong.aliyuncs.com/liki4/teloxide_bot:$VERSION
