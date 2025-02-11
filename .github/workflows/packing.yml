@@ -1,1 +1,45 @@
+name: Packing
 
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build-and-upload:
+    name: Build and upload
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Get version
+        shell: bash
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+
+      - name: Build Release
+        uses: actions-rs/cargo@v1
+        with:
+          use-cross: true
+          command: build
+          args: --release --target x86_64-unknown-linux-musl
+
+      - name: Build Image
+        shell: bash
+        run: |
+          docker build -t liki4_teloxide_bot:$VERSION --output=type=docker .
+          docker save liki4_teloxide_bot:$VERSION > liki4_teloxide_bot_$VERSION.tar
+          echo "IMAGE=liki4_teloxide_bot_$VERSION.tar" >> $GITHUB_ENV
+
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            target/x86_64-unknown-linux-musl/release/liki4_teloxide_bot
+            ${{ env.IMAGE }}
