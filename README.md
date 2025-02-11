@@ -1,5 +1,31 @@
 # Liki4TeloxideBot
 
+## Config
+
+改 .env 文件
+
+```
+# ERROR/WARN/INFO/DEBUG/TRACE
+RUST_LOG=DEBUG
+
+# 86400s=1d
+MEDIA_GROUP_MAPPING_TIMEOUT=86400
+
+TELOXIDE_TOKEN=<BOT_TOKEN>
+# Uncomment TELOXIDE_PROXY to use proxy
+# TELOXIDE_PROXY=http://127.0.0.1:7890/
+
+# Uncomment MEME_API_URL to use Python Version API
+# MEME_API_URL=http://meme.generator.com/
+MEME_MEDIA_GROUP_HANDLE_TIMEOUT=5
+```
+
+TELOXIDE_PROXY 开了 bot 就会走代理
+
+MEME_API_URL 开了 generator 就会走 python 版的 api
+
+别的没了
+
 ## Usage
 
 ### /meme list
@@ -53,6 +79,9 @@ random 和 generate 的入参逻辑都是一样的
 
 然后参数最后会根据 meme 对应的最大入参量截断，比如你给一个 2 个入参的 meme 发 3 个参数，最后生效的也只是前 2 个
 
+## Generator
 
+Rust 版在：https://github.com/MemeCrafters/meme-generator-rs
+Python 版在：https://github.com/MemeCrafters/meme-generator
 
 
