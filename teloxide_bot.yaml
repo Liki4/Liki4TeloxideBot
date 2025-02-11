@@ -1,0 +1,88 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: teloxide
+  labels:
+    app: teloxide
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  namespace: teloxide
+  name: teloxide-bot
+  labels:
+    helm.sh/chart: teloxide-bot-1.0.0
+    app.kubernetes.io/name: teloxide-bot
+    app.kubernetes.io/instance: teloxide-bot
+    app.kubernetes.io/version: "1.x.x"
+    app.kubernetes.io/managed-by: Helm
+---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  namespace: teloxide
+  name: teloxide-bot
+  labels:
+    helm.sh/chart: teloxide-bot-1.0.0
+    app.kubernetes.io/name: teloxide-bot
+    app.kubernetes.io/instance: teloxide-bot
+    app.kubernetes.io/version: "1.x.x"
+    app.kubernetes.io/managed-by: Helm
+data:
+  .env: |
+    # ERROR/WARN/INFO/DEBUG/TRACE
+    RUST_LOG=INFO
+    
+    # 86400s=1d
+    MEDIA_GROUP_MAPPING_TIMEOUT=86400
+    
+    TELOXIDE_TOKEN=<BOT_TOKEN>
+    # Uncomment TELOXIDE_PROXY to use proxy
+    # TELOXIDE_PROXY=http://127.0.0.1:7890/
+    
+    # Uncomment MEME_API_URL to use Python Version API
+    # MEME_API_URL=http://meme.generator.com/
+    MEME_MEDIA_GROUP_HANDLE_TIMEOUT=5
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: teloxide
+  name: teloxide-bot
+  labels:
+    helm.sh/chart: teloxide-bot-1.0.0
+    app.kubernetes.io/name: teloxide-bot
+    app.kubernetes.io/instance: teloxide-bot
+    app.kubernetes.io/version: "1.x.x"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: teloxide-bot
+      app.kubernetes.io/instance: teloxide-bot
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: teloxide-bot
+        app.kubernetes.io/instance: teloxide-bot
+    spec:
+      restartPolicy: Always
+      serviceAccountName: teloxide-bot
+      securityContext:
+        {}
+      volumes:
+        - name: dotenv
+          configMap:
+            name: teloxide-bot
+      containers:
+        - name: teloxide-bot
+          securityContext:
+            {}
+          image: "path/to/teloxide_bot:v1.0.0"
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - name: dotenv
+              mountPath: /bin/.env
+              subPath: .env
+              readOnly: true
