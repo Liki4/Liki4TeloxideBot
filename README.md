@@ -1,5 +1,9 @@
 # Liki4TeloxideBot
 
+女高中生自用 bot
+
+Teloxide 不赖，值得推荐
+
 ## Config
 
 改 .env 文件
