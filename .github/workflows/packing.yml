@@ -23,12 +23,24 @@ jobs:
         shell: bash
         run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
 
-      - name: Build Release
-        uses: actions-rs/cargo@v1
-        with:
-          use-cross: true
-          command: build
-          args: --release
+      - name: Install packages
+        shell: bash
+        run: |
+          sudo apt-get update && sudo apt-get install curl build-essential gcc fontconfig libfontconfig-dev libfreetype-dev
+
+      - name: Install Rust
+        shell: bash
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+          . "$HOME/.cargo/env"
+
+      - name: Build binary
+        shell: bash
+        run: |
+          cargo build --release
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
       - name: Build Image
         shell: bash
