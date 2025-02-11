@@ -1,6 +1,6 @@
 FROM ubuntu:latest
 
-RUN apt-get update && apt-get install bash curl build-essential gcc fontconfig libfontconfig-dev libfreetype-dev
+RUN apt-get update && apt-get install -y bash curl build-essential gcc fontconfig libfontconfig-dev libfreetype-dev
 
 COPY target/release/liki4_teloxide_bot /bin/liki4_teloxide_bot
 

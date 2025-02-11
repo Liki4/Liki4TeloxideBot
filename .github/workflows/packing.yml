@@ -26,7 +26,7 @@ jobs:
       - name: Install packages
         shell: bash
         run: |
-          sudo apt-get update && sudo apt-get install curl build-essential gcc fontconfig libfontconfig-dev libfreetype-dev
+          sudo apt-get update && sudo apt-get install -y curl build-essential gcc fontconfig libfontconfig-dev libfreetype-dev
 
       - name: Install Rust
         shell: bash
