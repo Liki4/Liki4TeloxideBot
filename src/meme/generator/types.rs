@@ -23,17 +23,24 @@ pub struct MemeKeyWithProperties {
 
 /// @see https://github.com/MeetWq/meme-generator/blob/8bb9fba/meme_generator/app.py#L105
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(default)]
 pub struct RenderMemeListRequest {
     pub meme_list: Option<Vec<MemeKeyWithProperties>>,
     pub text_template: Option<String>,
     pub add_category_icon: Option<bool>,
 }
 
-impl Default for RenderMemeListRequest {
-    fn default() -> Self {
+impl RenderMemeListRequest {
+    pub fn new(keys: Vec<String>) -> Self {
+        let mut meme_list = Vec::<MemeKeyWithProperties>::new();
+        for key in keys {
+            meme_list.push(MemeKeyWithProperties {
+                meme_key: key,
+                disabled: Some(false),
+                labels: Some(vec![]),
+            });
+        }
         Self {
-            meme_list: Some(Vec::<MemeKeyWithProperties>::new()),
+            meme_list: Some(meme_list),
             text_template: Some("{index}. {keywords}".to_string()),
             add_category_icon: Some(true),
         }

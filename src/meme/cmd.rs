@@ -10,13 +10,11 @@ use {
         },
         utils::{
             get_final_photo_list,
-            get_sender_profile_photo,
+            rand_num,
             send_media,
         },
     },
-    futures::executor::block_on,
     meme_generator::meme::MemeInfo,
-    rand::prelude::*,
     std::collections::HashMap,
     teloxide::{
         prelude::*,
@@ -84,64 +82,56 @@ pub async fn meme_command_handler(
             None => Error::ArgMismatch,
         },
         MemeAction::Random => {
-            // functions begin
-            fn get_filtered_memes(
-                with_profile_photo: bool,
-            ) -> Vec<(&'static String, &'static MemeInfo)> {
-                MEME_KEY_INFO_MAPPING
-                    .get()
-                    .unwrap()
-                    .iter()
-                    .filter(|(_, info)| match with_profile_photo {
-                        true => info.params.min_images == 1 && info.params.min_texts == 0,
-                        false => info.params.min_images == 0 && info.params.min_texts == 1,
-                    })
-                    .collect::<Vec<_>>()
-            }
-            fn render_meme_with_profile_photo(
-                key: &str, file_id: String, file_data: Vec<u8>,
-            ) -> Result<Vec<u8>, Error> {
-                let mut images = Vec::<(String, Vec<u8>)>::new();
-                images.push((file_id.clone(), file_data));
-                let options = RenderOptions {
-                    images: Some(images),
-                    texts: None,
-                    args: Some(HashMap::from([("circle".to_string(), true.into())])),
-                };
-                block_on(CLIENT.render_meme(key, options))
-            }
-            fn render_meme_with_username(key: &str, username: &str) -> Result<Vec<u8>, Error> {
-                let options = RenderOptions {
-                    images: None,
-                    texts: Some(vec![username.to_string()]),
-                    args: Some(HashMap::from([("circle".to_string(), true.into())])),
-                };
-
-                block_on(CLIENT.render_meme(key, options))
-            }
-            // functions end
-
             let mut meme: Result<Vec<u8>, Error> =
                 Err(Error::MemeFeedback("Get random meme failed".to_string()));
             let mut filename = String::new();
-            if let Ok(photo) = get_sender_profile_photo(bot, msg).await {
-                let mut rng = rand::rng();
-
+            if let (Some(photo_list), text_list) = (get_final_photo_list(bot, msg).await?, {
+                let mut combined_args = args;
                 if let Some(user) = &msg.from {
-                    if let Some((file_id, file_data)) = photo {
-                        if let Some((&ref key, &ref _info)) =
-                            get_filtered_memes(true).choose(&mut rng)
-                        {
-                            meme = render_meme_with_profile_photo(&key, file_id.clone(), file_data);
-                            filename = key.to_string();
-                        }
-                    } else if let Some((&ref key, &ref _info)) =
-                        get_filtered_memes(false).choose(&mut rng)
-                    {
-                        meme = render_meme_with_username(&key, &user.first_name);
-                        filename = key.to_string();
-                    }
+                    combined_args.push(user.first_name.clone());
                 }
+                combined_args
+            }) {
+                let filtered_meme: Vec<(&String, &MemeInfo)> = MEME_KEY_INFO_MAPPING
+                    .get()
+                    .unwrap()
+                    .iter()
+                    .filter(|(_, info)| {
+                        info.params.min_images as usize <= photo_list.len()
+                            && info.params.min_texts as usize <= text_list.len()
+                    })
+                    .collect();
+
+                let (&ref key, &ref info) = filtered_meme[rand_num(filtered_meme.len())];
+                let final_photo_list = photo_list
+                    .iter()
+                    .map(|(id, data)| (id.to_string(), data.clone()))
+                    .take(info.params.max_images as usize)
+                    .collect::<Vec<(String, Vec<u8>)>>();
+                let final_text_list = text_list
+                    .iter()
+                    .map(|s| s.to_string())
+                    .take(info.params.max_texts as usize)
+                    .collect::<Vec<String>>();
+                let options = RenderOptions {
+                    images: {
+                        if final_photo_list.len() > 0 {
+                            Some(final_photo_list)
+                        } else {
+                            None
+                        }
+                    },
+                    texts: {
+                        if final_text_list.len() > 0 {
+                            Some(final_text_list)
+                        } else {
+                            None
+                        }
+                    },
+                    args: Some(HashMap::from([("circle".to_string(), true.into())])),
+                };
+                meme = CLIENT.render_meme(key, options).await;
+                filename = key.to_string();
             }
             match meme {
                 Ok(meme) => {
@@ -165,7 +155,13 @@ pub async fn meme_command_handler(
                             let mut meme: Result<Vec<u8>, Error> =
                                 Err(Error::MemeFeedback("Generate meme failed".to_string()));
                             if let (Some(photo_list), text_list) =
-                                (get_final_photo_list(bot, msg).await?, args[1..].to_vec())
+                                (get_final_photo_list(bot, msg).await?, {
+                                    let mut combined_args = args[1..].to_vec();
+                                    if let Some(user) = &msg.from {
+                                        combined_args.push(user.first_name.clone());
+                                    }
+                                    combined_args
+                                })
                             {
                                 let final_photo_list = photo_list
                                     .iter()

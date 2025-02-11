@@ -9,7 +9,8 @@ use crate::meme::generator::{
 
 impl MemeApiClient {
     pub async fn render_list_impl(&self) -> Result<Vec<u8>, Error> {
-        let data = RenderMemeListRequest::default();
+        let keys = self.get_keys().await?;
+        let data = RenderMemeListRequest::new(keys);
         let response = self
             .post(
                 "/memes/render_list",

@@ -5,6 +5,7 @@ use {
         Digest,
         Md5,
     },
+    rand::Rng,
     std::collections::HashMap,
     teloxide::{
         net::Download,
@@ -21,6 +22,11 @@ use {
         },
     },
 };
+
+pub fn rand_num(max: usize) -> usize {
+    let mut rng = rand::rng();
+    rng.random_range(0..max)
+}
 
 pub fn hash_short(filename: &str) -> String {
     let mut hasher = Md5::new();
@@ -72,8 +78,8 @@ pub async fn get_final_photo_list(
 ) -> ResponseResult<Option<Vec<(String, Vec<u8>)>>> {
     let mut final_photo_list = Vec::<(String, Vec<u8>)>::new();
 
-    if let Some(media_group_id) = msg.media_group_id() {
-        match MEDIA_GROUP_MAPPING.get_values(media_group_id) {
+    match msg.media_group_id() {
+        Some(media_group_id) => match MEDIA_GROUP_MAPPING.get_values(media_group_id) {
             Some(photo_ids) => {
                 for photo_id in photo_ids {
                     let (id, data) = file_downloader(bot, &photo_id).await?;
@@ -89,6 +95,17 @@ pub async fn get_final_photo_list(
                 .reply_parameters(ReplyParameters::new(msg.id))
                 .await?;
                 return Ok(None);
+            }
+        },
+        None => {
+            if let Some(photos) = msg.photo() {
+                let replied_photo = photos.last().unwrap();
+                let (id, data) = file_downloader(bot, &replied_photo.file.id).await?;
+                final_photo_list.push((id, data));
+            }
+            if let Some(animation) = msg.animation() {
+                let (id, data) = file_downloader(bot, &animation.file.id).await?;
+                final_photo_list.push((id, data));
             }
         }
     }

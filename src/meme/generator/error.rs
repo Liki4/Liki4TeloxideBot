@@ -44,6 +44,12 @@ impl From<reqwest::Error> for Error {
     }
 }
 
+impl From<url::ParseError> for Error {
+    fn from(e: url::ParseError) -> Self {
+        Error::ReqwestError(e.to_string())
+    }
+}
+
 impl From<meme_generator::error::Error> for Error {
     fn from(e: meme_generator::error::Error) -> Self {
         match e {

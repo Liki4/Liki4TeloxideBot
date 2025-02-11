@@ -16,11 +16,12 @@ use {
     },
     serde_json::Value,
     std::collections::HashMap,
+    url::Url,
 };
 
 pub struct MemeApiClient {
-    base_url: String,
-    pub client: Client,
+    base_url: Url,
+    client: Client,
 }
 
 pub enum PostBody {
@@ -32,20 +33,22 @@ impl MemeApiClient {
     pub fn new(base_url: &str) -> Result<Self, Error> {
         let client = Client::builder().build()?;
         Ok(Self {
-            base_url: base_url.to_owned(),
+            base_url: Url::parse(&base_url)?,
             client,
         })
     }
 
     pub async fn get(&self, path: &str) -> Result<Response, Error> {
-        let url = format!("{}{}", self.base_url, path);
-        let response = self.client.get(&url).send().await?;
+        let url = self.base_url.join(path)?;
+        log::debug!("Requesting meme GET at: {}", url);
+        let response = self.client.get(url).send().await?;
         response_handler(response).await
     }
 
     pub async fn post(&self, path: &str, body: PostBody) -> Result<Response, Error> {
-        let url = format!("{}{}", self.base_url, path);
-        let request_builder = self.client.post(&url);
+        let url = self.base_url.join(path)?;
+        log::debug!("Requesting meme POST at: {}", url);
+        let request_builder = self.client.post(url);
         let request = match body {
             PostBody::Json(data) => request_builder.json(&data),
             PostBody::Multipart(form) => request_builder.multipart(form),

@@ -7,6 +7,7 @@ use {
         handler::endpoint::{
             media_group_handler,
             media_group_with_command_handler,
+            single_photo_with_command_handler,
         },
     },
     bot::handler::{
@@ -36,15 +37,22 @@ async fn main() {
                 .endpoint(command::command_handler),
         )
         .branch(
-            dptree::filter(|msg: Message| msg.media_group_id().is_some() && msg.photo().is_some())
+            dptree::filter(|msg: Message| msg.photo().is_some())
                 .branch(
-                    dptree::filter(|msg: Message| {
-                        msg.caption()
-                            .map_or(false, |caption| Command::parse(caption, "").is_ok())
-                    })
-                    .endpoint(media_group_with_command_handler),
+                    dptree::filter(|msg: Message| msg.media_group_id().is_some())
+                        .branch(
+                            dptree::filter(|msg: Message| {
+                                msg.caption()
+                                    .map_or(false, |caption| Command::parse(caption, "").is_ok())
+                            })
+                            .endpoint(media_group_with_command_handler),
+                        )
+                        .branch(dptree::endpoint(media_group_handler)),
                 )
-                .branch(dptree::endpoint(media_group_handler)),
+                .branch(
+                    dptree::filter(|msg: Message| msg.media_group_id().is_none())
+                        .endpoint(single_photo_with_command_handler),
+                ),
         );
 
     Dispatcher::builder(bot, handler)
