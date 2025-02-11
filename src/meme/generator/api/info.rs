@@ -9,7 +9,10 @@ use {
         NaiveDateTime,
         TimeZone,
     },
-    indicatif::ProgressBar,
+    indicatif::{
+        ProgressBar,
+        ProgressStyle,
+    },
     meme_generator::meme::{
         MemeInfo,
         MemeOption,
@@ -128,6 +131,14 @@ impl MemeApiClient {
         let keys = self.get_keys().await?;
         let mut infos: HashMap<String, MemeInfo> = HashMap::new();
         let bar = ProgressBar::new(keys.len() as u64);
+        bar.set_style(
+            ProgressStyle::default_bar()
+                .template(
+                    "{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] {pos}/{len} ({eta})",
+                )
+                .unwrap()
+                .progress_chars("#>-"),
+        );
         for key in keys {
             let meme_info = self.get_info_impl(&key).await?;
             infos.insert(key, meme_info);
