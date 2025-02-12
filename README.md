@@ -83,6 +83,8 @@ random 和 generate 的入参逻辑都是一样的
 
 然后参数最后会根据 meme 对应的最大入参量截断，比如你给一个 2 个入参的 meme 发 3 个参数，最后生效的也只是前 2 个
 
+注意！如果要同时使用多张图片，无论是回复还是直接发，都要求把 [Privacy Mode](https://core.telegram.org/bots/features#privacy-mode) 关闭，否则只能取出来第一张图片
+
 ## Generator
 
 Rust 版在：https://github.com/MemeCrafters/meme-generator-rs

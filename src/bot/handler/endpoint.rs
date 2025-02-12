@@ -49,7 +49,7 @@ pub async fn media_group_with_command_handler(bot: Bot, msg: Message) -> Respons
         .await;
 
         if let Some(caption) = msg.caption() {
-            if let Some(cmd) = Command::parse(caption, "").ok() {
+            if let Some(cmd) = Command::parse(caption, &env::var("BOT_NAME").unwrap()).ok() {
                 command_handler(bot, msg, cmd).await.ok();
             }
         }
@@ -61,7 +61,7 @@ pub async fn media_group_with_command_handler(bot: Bot, msg: Message) -> Respons
 pub async fn single_photo_with_command_handler(bot: Bot, msg: Message) -> ResponseResult<()> {
     tokio::spawn(async move {
         if let Some(caption) = msg.caption() {
-            if let Some(cmd) = Command::parse(caption, "").ok() {
+            if let Some(cmd) = Command::parse(caption, &env::var("BOT_NAME").unwrap()).ok() {
                 command_handler(bot, msg, cmd).await.ok();
             }
         }
