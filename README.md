@@ -16,6 +16,8 @@ RUST_LOG=DEBUG
 MEDIA_GROUP_MAPPING_TIMEOUT=86400
 
 TELOXIDE_TOKEN=<BOT_TOKEN>
+# Without `@`, to precisely parse commands
+BOT_NAME=teloxide_test_bot
 # Uncomment TELOXIDE_PROXY to use proxy
 # TELOXIDE_PROXY=http://127.0.0.1:7890/
 
