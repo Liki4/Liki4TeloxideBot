@@ -4,7 +4,6 @@ mod utils;
 
 use {
     std::{
-        error::Error,
         fmt::{
             self,
             Display,
@@ -12,14 +11,12 @@ use {
         },
         str::FromStr,
     },
-    teloxide::utils::command::{
-        ParseError,
-        ParseError::IncorrectFormat,
-    },
+    teloxide::utils::command::ParseError,
 };
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum MemeAction {
+    Help,
     List,
     Search,
     Info,
@@ -37,9 +34,7 @@ impl FromStr for MemeAction {
             "search" => Ok(MemeAction::Search),
             "random" => Ok(MemeAction::Random),
             "generate" => Ok(MemeAction::Generate),
-            _ => Err(IncorrectFormat(
-                Box::<dyn Error + Send + Sync + 'static>::from("Unknown MemeAction"),
-            )),
+            _ => Ok(MemeAction::Help),
         }
     }
 }
@@ -47,6 +42,7 @@ impl FromStr for MemeAction {
 impl Display for MemeAction {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         match self {
+            MemeAction::Help => write!(f, "help"),
             MemeAction::Info => write!(f, "info"),
             MemeAction::List => write!(f, "list"),
             MemeAction::Search => write!(f, "search"),

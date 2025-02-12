@@ -1,7 +1,6 @@
 mod bot;
 mod meme;
 
-use std::env;
 use {
     crate::bot::{
         bot_init,
@@ -15,6 +14,7 @@ use {
         command,
         command::Command,
     },
+    std::env,
     teloxide::{
         prelude::*,
         utils::command::BotCommands,
@@ -43,8 +43,9 @@ async fn main() {
                     dptree::filter(|msg: Message| msg.media_group_id().is_some())
                         .branch(
                             dptree::filter(|msg: Message| {
-                                msg.caption()
-                                    .map_or(false, |caption| Command::parse(caption, &env::var("BOT_NAME").unwrap()).is_ok())
+                                msg.caption().map_or(false, |caption| {
+                                    Command::parse(caption, &env::var("BOT_NAME").unwrap()).is_ok()
+                                })
                             })
                             .endpoint(media_group_with_command_handler),
                         )

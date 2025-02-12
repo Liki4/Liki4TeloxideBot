@@ -26,10 +26,34 @@ use {
     },
 };
 
+const HELP_MSG: &str = r#"
+`/meme help` \- display this message
+`/meme list` \- list all memes
+`/meme info <key/keyword>` \- display meme information
+`/meme search <keyword>` \- search meme key by keyword
+`/meme random [args]` \- generate a random meme
+`/meme generate <key/keyword> [args]` \- generate a specific meme
+
+args \= `[<text1> <text2>] [<@someone> <@someone_else>]`
+
+**random** & **generate** action can pass photo using `@someone`, append as photo and reply to a media group message
+
+command sender's **first\_name** & **profile\_photo** will append to end of texts\_list and photos\_list
+
+see https://github\.com/Liki4/Liki4TeloxideBot for more details\.
+"#;
+
 pub async fn meme_command_handler(
     bot: &Bot, msg: &Message, action: MemeAction, args: Vec<String>,
 ) -> ResponseResult<Message> {
     let error = match action {
+        MemeAction::Help => {
+            return bot
+                .send_message(msg.chat.id, HELP_MSG)
+                .parse_mode(ParseMode::MarkdownV2)
+                .reply_parameters(ReplyParameters::new(msg.id))
+                .await;
+        }
         MemeAction::Info => match args.first() {
             Some(keyword) => {
                 if let Some(key) = MEME_KEYWORD_KEY_MAPPING.get().unwrap().get(keyword) {
