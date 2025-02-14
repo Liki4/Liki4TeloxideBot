@@ -27,20 +27,29 @@ use {
 };
 
 const HELP_MSG: &str = r#"
-`/meme help` \- display this message
-`/meme list` \- list all memes
-`/meme info <key/keyword>` \- display meme information
-`/meme search <keyword>` \- search meme key by keyword
-`/meme random [args]` \- generate a random meme
-`/meme generate <key/keyword> [args]` \- generate a specific meme
+**Meme Bot Commands:**
 
-args \= `[<text1> <text2>] [<@someone> <@someone_else>]`
+`/meme help` \- Display this help message\.
+`/meme list` \- List all available memes\.
+`/meme info <key/keyword>` \- Display detailed information about a specific meme\.
+`/meme search <keyword>` \- Search for a meme by keyword\.
+`/meme random [args]` \- Generate a random meme with optional arguments\.
+`/meme generate <key/keyword> [args]` \- Generate a specific meme with optional arguments\.
 
-**random** & **generate** action can pass photo using `@someone`, append as photo and reply to a media group message
+**Arguments Format:**
+`[<text1> <text2>] [<@someone> <@someone_else>]`
 
-command sender's **first\_name** & **profile\_photo** will append to end of texts\_list and photos\_list
+· **Texts:** Provide text inputs for the meme\.
+· **Photos:** Mention users \(`@someone`\) to include their profile photos in the meme\.
 
-see https://github\.com/Liki4/Liki4TeloxideBot for more details\.
+**Additional Notes:**
+· The **random** and **generate** commands can use photos by
+  · attaching an image to the command message
+  · mentioning users \(`@someone`\) in the command message
+  · replying to a media group message
+· The command sender's **first\_name** and **profile\_photo** are automatically appended to the end of the `texts\_list` and `photos\_list`\.
+
+For more details, visit the [GitHub repository Liki4TeloxideBot](https://github\.com/Liki4/Liki4TeloxideBot)\.
 "#;
 
 pub async fn meme_command_handler(
